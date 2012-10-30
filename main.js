@@ -2,12 +2,10 @@ var WIDTH 		= 640,
 	HEIGHT 		= 480,
 	TILE_W 		= 32,
 	TILE_H 		= 32,
-	TILE_NUM_X 	= 10,
-	TILE_NUM_Y 	= 10,
-	CONN_NUM_X	= TILE_NUM_X - 1,
-	CONN_NUM_Y	= TILE_NUM_Y - 1,
-	GRID_OFF_X	= 32,
-	GRID_OFF_Y	= 32,
+	NODE_NUM_X 	= 10,
+	NODE_NUM_Y 	= 10,
+	GRID_OFF_X	= 0,
+	GRID_OFF_Y	= 0,
 	gLoop,
 	c 			= document.getElementById('c'), 
 	ctx 		= c.getContext('2d');			
@@ -15,11 +13,20 @@ var WIDTH 		= 640,
 	c.height 	= HEIGHT;
 var gMousePosX = 0;
 var gMousePosY = 0;
-var gConnectionArray = new Array( 1, 1, 1, 1 );
+var gNodeArray = new Array();
+
+for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
+{
+	var node = new Object()
+	node.enabled 	= true;
+	node.connDown	= false;
+	node.connRight	= false;
+	gNodeArray[ i ] = node;
+}
+
 
 var Simulate = function()
 {
-	gConnectionArray[ 0 ] = 1;
 }
 
 var Clear = function()
@@ -36,26 +43,34 @@ var DrawGrid = function()
 {
 	ctx.strokeStyle = '#FFDD00';
 	ctx.lineWidth 	= 4;
-	for ( var y = 0; y < CONN_NUM_Y; ++y )
+	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
-		for ( var x = 0; x < CONN_NUM_X; ++x )
+		for ( var x = 0; x < NODE_NUM_X; ++x )
 		{
-			if ( gConnectionArray[ x + y * CONN_NUM_X ] == 1 )
+			if ( gNodeArray[ x + y * NODE_NUM_X ] && gNodeArray[ x + y * NODE_NUM_X ].connRight )
 			{
 				ctx.beginPath();
 				ctx.moveTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H );
-				ctx.lineTo( GRID_OFF_X + ( x + 1.0 ) * TILE_W, GRID_OFF_Y + y* TILE_H );
+				ctx.lineTo( GRID_OFF_X + ( x + 1 ) * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.stroke();
 			}
+			
+			if ( gNodeArray[ x + y * NODE_NUM_X ] && gNodeArray[ x + y * NODE_NUM_X ].connDown )
+			{
+				ctx.beginPath();
+				ctx.moveTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H );
+				ctx.lineTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + ( y + 1 ) * TILE_H );
+				ctx.stroke();
+			}			
 		}
 	}
 
 	ctx.fillStyle 	= 'green';
 	ctx.strokeStyle = '#FFDD00';	
 	ctx.lineWidth 	= 2;
-	for ( var y = 0; y < TILE_NUM_Y; ++y )
+	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
-		for ( var x = 0; x < TILE_NUM_X; ++x )
+		for ( var x = 0; x < NODE_NUM_X; ++x )
 		{
 		    ctx.beginPath();
 			ctx.arc( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H, 4, 0, 2 * Math.PI, false );
@@ -135,15 +150,31 @@ var DrawDesc = function()
 document.onmouseup = function()
 {
 	if ( gMousePosX >= 0 && gMousePosY >= 0 )
-	{
-		//console.log( gMousePosX );
-		
-		var tileX = Math.floor( ( gMousePosX - GRID_OFF_X ) / TILE_W );
-		var tileY = Math.floor( ( gMousePosY - GRID_OFF_Y + 0.5 * TILE_H ) / TILE_H );
-		
-		if ( tileX >= 0 && tileY >= 0 && tileX < TILE_NUM_X && tileY < TILE_NUM_Y )
+	{		
+		var posX  		= ( gMousePosX - GRID_OFF_X ) / TILE_W;
+		var posY  		= ( gMousePosY - GRID_OFF_Y ) / TILE_H;
+		var tileX 		= Math.floor( posX );
+		var tileY 		= Math.floor( posY );
+		var tileSubPosX = posX - tileX;
+		var tileSubPosY = posY - tileY;
+	
+		console.log( "mousePos:", gMousePosX, gMousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );
+
+		if ( tileSubPosX > tileSubPosY && tileSubPosX < 1 - tileSubPosY )
 		{
-			gConnectionArray[ tileX + tileY * CONN_NUM_X ] = !gConnectionArray[ tileX + tileY * CONN_NUM_X ];
+			gNodeArray[ tileX + tileY * NODE_NUM_X ].connRight = !gNodeArray[ tileX + tileY * NODE_NUM_X ].connRight;
+		}
+		else if ( tileSubPosX < tileSubPosY && tileSubPosX > 1 - tileSubPosY )
+		{
+			gNodeArray[ tileX + ( tileY + 1 ) * NODE_NUM_X ].connRight = !gNodeArray[ tileX + ( tileY + 1 ) * NODE_NUM_X ].connRight;
+		}
+		else if ( tileSubPosX < tileSubPosY && tileSubPosX < 1 - tileSubPosY )
+		{
+			gNodeArray[ tileX + tileY * NODE_NUM_X ].connDown = !gNodeArray[ tileX + tileY * NODE_NUM_X ].connDown;
+		}
+		else
+		{
+			gNodeArray[ tileX + 1 + tileY * NODE_NUM_X ].connDown = !gNodeArray[ tileX + 1 + tileY * NODE_NUM_X ].connDown;
 		}
 	}
 }
