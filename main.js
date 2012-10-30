@@ -4,8 +4,8 @@ var WIDTH 		= 640,
 	TILE_H 		= 32,
 	NODE_NUM_X 	= 10,
 	NODE_NUM_Y 	= 10,
-	GRID_OFF_X	= 0,
-	GRID_OFF_Y	= 0,
+	GRID_OFF_X	= 20,
+	GRID_OFF_Y	= 20,
 	gLoop,
 	c 			= document.getElementById('c'), 
 	ctx 		= c.getContext('2d');			
@@ -147,6 +147,23 @@ var DrawDesc = function()
 	ctx.fillText( "Route power from @clk to @out", 530, 420 );
 };
 
+var SwitchConnector = function( nodeX, nodeY, right )
+{
+	if ( nodeX >= 0 && nodeY >= 0 && nodeX < NODE_NUM_X && nodeY < NODE_NUM_Y )
+	if ( nodeX + 1 < NODE_NUM_X || !right )
+	if ( nodeY + 1 < NODE_NUM_X || right )	
+	{
+		if ( right )
+		{
+			gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight;
+		}
+		else
+		{
+			gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown;
+		}
+	}
+}
+
 document.onmouseup = function()
 {
 	if ( gMousePosX >= 0 && gMousePosY >= 0 )
@@ -162,19 +179,19 @@ document.onmouseup = function()
 
 		if ( tileSubPosX > tileSubPosY && tileSubPosX < 1 - tileSubPosY )
 		{
-			gNodeArray[ tileX + tileY * NODE_NUM_X ].connRight = !gNodeArray[ tileX + tileY * NODE_NUM_X ].connRight;
+			SwitchConnector( tileX, tileY, true );
 		}
 		else if ( tileSubPosX < tileSubPosY && tileSubPosX > 1 - tileSubPosY )
 		{
-			gNodeArray[ tileX + ( tileY + 1 ) * NODE_NUM_X ].connRight = !gNodeArray[ tileX + ( tileY + 1 ) * NODE_NUM_X ].connRight;
+			SwitchConnector( tileX, tileY + 1, true );
 		}
 		else if ( tileSubPosX < tileSubPosY && tileSubPosX < 1 - tileSubPosY )
 		{
-			gNodeArray[ tileX + tileY * NODE_NUM_X ].connDown = !gNodeArray[ tileX + tileY * NODE_NUM_X ].connDown;
+			SwitchConnector( tileX, tileY, false );	
 		}
 		else
 		{
-			gNodeArray[ tileX + 1 + tileY * NODE_NUM_X ].connDown = !gNodeArray[ tileX + 1 + tileY * NODE_NUM_X ].connDown;
+			SwitchConnector( tileX + 1, tileY, false );
 		}
 	}
 }
