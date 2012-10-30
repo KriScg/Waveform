@@ -1,7 +1,7 @@
 var WIDTH 		= 640, 
 	HEIGHT 		= 480,
-	TILE_W 		= 32,
-	TILE_H 		= 32,
+	TILE_W 		= 36,
+	TILE_H 		= 36,
 	NODE_NUM_X 	= 10,
 	NODE_NUM_Y 	= 10,
 	GRID_OFF_X	= 20,
@@ -14,6 +14,8 @@ var WIDTH 		= 640,
 var gMousePosX = 0;
 var gMousePosY = 0;
 var gNodeArray = new Array();
+var gCurrCycle = 0;
+var gWaveform  = new Array();
 
 for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 {
@@ -21,12 +23,15 @@ for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 	node.enabled 	= true;
 	node.connDown	= false;
 	node.connRight	= false;
+	node.state		= 0;
 	gNodeArray[ i ] = node;
 }
 
 
 var Simulate = function()
-{
+{	
+	gCurrCycle += 1;
+	gWaveform.push( 1 );
 }
 
 var Clear = function()
@@ -39,10 +44,41 @@ var Clear = function()
 	ctx.fill();
 }
 
+var DrawAND = function( posX, posY )
+{
+	var size = 10;
+	ctx.strokeStyle = 'black';
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	
+	ctx.arc( posX, posY, size, 1.5 * Math.PI, 0.5 * Math.PI, false );
+	
+	ctx.moveTo( posX, posY - size );
+	ctx.lineTo( posX - size, posY - size );
+	ctx.lineTo( posX - size, posY + size );
+	ctx.lineTo( posX, posY + size );
+	
+	// inputs
+	ctx.moveTo( posX - size, posY - size * 0.5 );
+	ctx.lineTo( posX - 0.5 * TILE_W, posY - size * 0.5 );
+	ctx.lineTo( posX - 0.5 * TILE_W, posY - size * 2 );
+	ctx.moveTo( posX - size, posY + size * 0.5 );
+	ctx.lineTo( posX - 0.5 * TILE_W, posY + size * 0.5 );
+	ctx.lineTo( posX - 0.5 * TILE_W, posY + size * 2 );
+	
+	// outputs
+	ctx.moveTo( posX + size, posY );
+	ctx.lineTo( posX + 0.5 * TILE_W, posY );
+	ctx.lineTo( posX + 0.5 * TILE_W, posY - size * 2 );
+	ctx.moveTo( posX + 0.5 * TILE_W, posY );
+	ctx.lineTo( posX + 0.5 * TILE_W, posY + size * 2 );
+	ctx.stroke();
+}
+
 var DrawGrid = function()
 {
 	ctx.strokeStyle = '#FFDD00';
-	ctx.lineWidth 	= 4;
+	ctx.lineWidth 	= 3;
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
 		for ( var x = 0; x < NODE_NUM_X; ++x )
@@ -64,6 +100,12 @@ var DrawGrid = function()
 			}			
 		}
 	}
+	
+	ctx.save();
+	ctx.translate( GRID_OFF_X + 0.5 * TILE_W, GRID_OFF_Y + 0.5 * TILE_H );
+	ctx.rotate( 0.5 * Math.PI )
+	DrawAND( 0, 0 )
+	ctx.restore();
 
 	ctx.fillStyle 	= 'green';
 	ctx.strokeStyle = '#FFDD00';	
@@ -82,7 +124,6 @@ var DrawGrid = function()
 
 var DrawWaveform = function()
 {
-	var testWave = new Array( 0, 1, 0, 1, 1, 1, 0, 1, 0 );
 	var posX 	= 20;
 	var posY 	= 400;
 	var width 	= 16;
@@ -90,20 +131,21 @@ var DrawWaveform = function()
 	
 	ctx.fillStyle = 'black';
 	ctx.font = '10px Arial';
+	ctx.textAlign = 'left';
+	ctx.fillText( "WAVEFORMS Cycle: " + gCurrCycle.toString() + "/20", posX, posY - 10 );
 	ctx.textAlign = 'center';
-	ctx.fillText( "WAVEFORMS:", posX + 30, posY - 10 );
 	ctx.fillText( "1", posX - 5, posY + 5 );
 	ctx.fillText( "0", posX - 5, posY + height + 5 );
 	
 	ctx.strokeStyle = 'green';
 	ctx.lineWidth = 2;
 	ctx.beginPath();	
-	for ( var i = 0; i < testWave.length; ++i )
+	for ( var i = 0; i < gWaveform.length; ++i )
 	{
-		ctx.moveTo( posX + i * width, posY + ( testWave[ i ] == 0 ? height : 0 ) );
-		ctx.lineTo( posX + ( i + 1 ) * width, posY + ( testWave[ i ] == 0 ? height : 0 ) );
+		ctx.moveTo( posX + i * width, posY + ( gWaveform[ i ] ? 0 : height ) );
+		ctx.lineTo( posX + ( i + 1 ) * width, posY + ( gWaveform[ i ] ? 0 : height ) );
 		
-		if ( i + 1 < testWave.length && testWave[ i ] != testWave[ i + 1 ] )
+		if ( i + 1 < gWaveform.length && gWaveform[ i ] != gWaveform[ i + 1 ] )
 		{
 			ctx.moveTo( posX + ( i + 1 ) * width, posY );
 			ctx.lineTo( posX + ( i + 1 ) * width, posY + height );
@@ -175,7 +217,7 @@ document.onmouseup = function()
 		var tileSubPosX = posX - tileX;
 		var tileSubPosY = posY - tileY;
 	
-		console.log( "mousePos:", gMousePosX, gMousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );
+		//console.log( "mousePos:", gMousePosX, gMousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );
 
 		if ( tileSubPosX > tileSubPosY && tileSubPosX < 1 - tileSubPosY )
 		{
@@ -193,6 +235,10 @@ document.onmouseup = function()
 		{
 			SwitchConnector( tileX + 1, tileY, false );
 		}
+	}
+	else
+	{
+		Simulate();
 	}
 }
 
