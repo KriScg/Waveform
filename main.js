@@ -1,11 +1,11 @@
-var WIDTH 			= 640, 
-	HEIGHT 			= 480,
+var WIDTH 			= 600, 
+	HEIGHT 			= 600,
 	TILE_W 			= 36,
 	TILE_H 			= 36,
 	NODE_NUM_X 		= 10,
 	NODE_NUM_Y 		= 10,
-	GRID_OFF_X		= 50,
-	GRID_OFF_Y		= 20,
+	GRID_OFF_X		= 30,
+	GRID_OFF_Y		= 30,
 	gLoop,
 	c 				= document.getElementById('c'), 
 	ctx 			= c.getContext('2d');			
@@ -15,6 +15,10 @@ var gNodeArray 		= new Array();
 var gGateArray		= new Array();
 var gCurrCycle 		= 0;
 var gWaveform  		= new Array();
+var gWaveformInputA = new Array( 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0 );
+var gWaveformInputB = new Array( 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0 );
+var gWaveformInputC = new Array( 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1 );
+var gWaveformOutput = new Array( 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 );
 var gDirtyNodeArray	= new Array();
 var gButtonArray	= new Array();
 
@@ -30,8 +34,8 @@ for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 	gNodeArray[ i ] = { enabled:true, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
 }
 
-gButtonArray.push( { posX:20, posY:430, width:30, height:30, text:"verify" } );
-gButtonArray.push( { posX:50, posY:430, width:30, height:30, text:"abc" } );
+gButtonArray.push( { posX:300, posY:380, width:30, height:30, text:"verify" } );
+gButtonArray.push( { posX:330, posY:380, width:30, height:30, text:"abc" } );
 gButtonArray.push( { posX:500, posY:10, width:30, height:30, text:"NOT" } );
 gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
 
@@ -212,10 +216,33 @@ var DrawGrid = function()
 	}
 };
 
+var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay )
+{
+	ctx.fillText( text, posX - 30, posY + height * 0.5 );
+	ctx.fillText( "1", posX - 5, posY );
+	ctx.fillText( "0", posX - 5, posY + height );
+
+	ctx.strokeStyle = overlay ? '#888888' : '#000000';
+	ctx.lineWidth = 2;
+	ctx.beginPath();	
+	for ( var i = 0; i < waveform.length; ++i )
+	{
+		ctx.moveTo( posX + i * width, posY + ( waveform[ i ] ? 0 : height ) );
+		ctx.lineTo( posX + ( i + 1 ) * width, posY + ( waveform[ i ] ? 0 : height ) );
+		
+		if ( i + 1 < waveform.length && waveform[ i ] != waveform[ i + 1 ] )
+		{
+			ctx.moveTo( posX + ( i + 1 ) * width, posY );
+			ctx.lineTo( posX + ( i + 1 ) * width, posY + height );
+		}
+	}
+	ctx.stroke();
+}
+
 var DrawTestBench = function()
 {
-	var posX 	= 20;
-	var posY 	= 400;
+	var posX 	= 60;
+	var posY 	= 420;
 	var width 	= 16;
 	var height 	= 16;
 	
@@ -223,25 +250,13 @@ var DrawTestBench = function()
 	ctx.font = '10px Arial';
 	ctx.textAlign = 'left';
 	ctx.fillText( "WAVEFORMS Cycle: " + gCurrCycle.toString() + "/20", posX, posY - 10 );
-	ctx.textAlign = 'center';
-	ctx.fillText( "1", posX - 5, posY + 5 );
-	ctx.fillText( "0", posX - 5, posY + height + 5 );
+	ctx.textAlign = 'center';	
 	
-	ctx.strokeStyle = 'green';
-	ctx.lineWidth = 2;
-	ctx.beginPath();	
-	for ( var i = 0; i < gWaveform.length; ++i )
-	{
-		ctx.moveTo( posX + i * width, posY + ( gWaveform[ i ] ? 0 : height ) );
-		ctx.lineTo( posX + ( i + 1 ) * width, posY + ( gWaveform[ i ] ? 0 : height ) );
-		
-		if ( i + 1 < gWaveform.length && gWaveform[ i ] != gWaveform[ i + 1 ] )
-		{
-			ctx.moveTo( posX + ( i + 1 ) * width, posY );
-			ctx.lineTo( posX + ( i + 1 ) * width, posY + height );
-		}
-	}
-	ctx.stroke();
+	DrawWaveform( posX, posY, width, height, "InputA", gWaveformInputA );
+	DrawWaveform( posX, posY + height * 2.5, width, height, "InputB", gWaveformInputB );
+	DrawWaveform( posX, posY + height * 5, width, height, "InputC", gWaveformInputC );
+	DrawWaveform( posX, posY + height * 7.5, width, height, "Output", gWaveformOutput, true );	
+	DrawWaveform( posX, posY + height * 7.5, width, height, "Output", gWaveform );
 };
 
 var DrawHUD = function()
