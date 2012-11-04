@@ -1,43 +1,119 @@
-var WIDTH 		= 640, 
-	HEIGHT 		= 480,
-	TILE_W 		= 36,
-	TILE_H 		= 36,
-	NODE_NUM_X 	= 10,
-	NODE_NUM_Y 	= 10,
-	GRID_OFF_X	= 20,
-	GRID_OFF_Y	= 20,
+var WIDTH 			= 640, 
+	HEIGHT 			= 480,
+	TILE_W 			= 36,
+	TILE_H 			= 36,
+	NODE_NUM_X 		= 10,
+	NODE_NUM_Y 		= 10,
+	GRID_OFF_X		= 20,
+	GRID_OFF_Y		= 20,
 	gLoop,
-	c 			= document.getElementById('c'), 
-	ctx 		= c.getContext('2d');			
-	c.width 	= WIDTH;
-	c.height 	= HEIGHT;
-var gMousePosX = 0;
-var gMousePosY = 0;
-var gNodeArray = new Array();
-var gCurrCycle = 0;
-var gWaveform  = new Array();
+	c 				= document.getElementById('c'), 
+	ctx 			= c.getContext('2d');			
+	c.width 		= WIDTH;
+	c.height 		= HEIGHT;
+var gMousePosX 		= 0;
+var gMousePosY 		= 0;
+var gNodeArray 		= new Array();
+var gGateArray		= new Array();
+var gCurrCycle 		= 0;
+var gWaveform  		= new Array();
+var gDirtyNodeArray	= new Array();
+var gButtonArray	= new Array();
 
 for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 {
-	var node = new Object()
-	node.enabled 	= true;
-	node.connDown	= false;
-	node.connRight	= false;
-	node.state		= 0;
-	gNodeArray[ i ] = node;
+	gNodeArray[ i ] = { enabled:true, connDown:false, connRight:false, state:0 };
 }
+
+gButtonArray.push( { posX:20, posY:430, width:30, height:30  } );
+gButtonArray.push( { posX:50, posY:430, width:30, height:30  } );
+gGateArray.push( { srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
+gNodeArray[ 0 ].state = 1;
+gDirtyNodeArray.push( 0 );
 
 
 var Simulate = function()
-{	
-	gCurrCycle += 1;
-	gWaveform.push( 1 );
+{
+	var dirtyNodeArrLen = gDirtyNodeArray.length;
+	for ( var i = 0; i < dirtyNodeArrLen; ++i )
+	{
+		var nodeID = gDirtyNodeArray[ i ];
+		
+		// right
+		if ( gNodeArray[ nodeID ].connRight )
+		{
+			if ( gNodeArray[ nodeID + 1 ].state != gNodeArray[ nodeID ].state )
+			{
+				gNodeArray[ nodeID + 1 ].state = gNodeArray[ nodeID ].state
+				gDirtyNodeArray.push( nodeID + 1 )
+			}
+		}
+		
+		// down
+		if ( gNodeArray[ nodeID ].connDown )
+		{
+			if ( gNodeArray[ nodeID + NODE_NUM_X ].state != gNodeArray[ nodeID ].state )
+			{
+				gNodeArray[ nodeID + NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
+				gDirtyNodeArray.push( nodeID + NODE_NUM_X )
+			}
+		}
+		
+		// left
+		if ( nodeID > 0 && gNodeArray[ nodeID - 1 ].connRight )
+		{
+			if ( gNodeArray[ nodeID - 1 ].state != gNodeArray[ nodeID ].state )
+			{		
+				gNodeArray[ nodeID - 1 ].state = gNodeArray[ nodeID ].state;
+				gDirtyNodeArray.push( nodeID - 1 )
+			}
+		}
+		
+		// up
+		if ( nodeID > NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown )
+		{
+			if ( gNodeArray[ nodeID - NODE_NUM_X ].state != gNodeArray[ nodeID ].state )
+			{
+				gNodeArray[ nodeID - NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
+				gDirtyNodeArray.push( nodeID - NODE_NUM_X )			
+			}
+		}
+		
+		// gates
+		var arrLen = gGateArray.length;
+		for ( var j = 0; j < arrLen; ++j )
+		{
+			var gate = gGateArray[ j ];
+			if ( gate.srcNodeA == nodeID || gate.srcNodeB == nodeID )
+			{
+				var state = gNodeArray[ gate.srcNodeA ].state == 1 && gNodeArray[ gate.srcNodeB ].state == 1 ? 1 : 0;
+				
+				if ( gNodeArray[ gate.dstNodeA ].state != state )
+				{
+					gNodeArray[ gate.dstNodeA ].state = state;
+					gDirtyNodeArray.push( gate.dstNodeA );
+				}
+				
+				if ( gNodeArray[ gate.dstNodeB ].state != state )
+				{
+					gNodeArray[ gate.dstNodeB ].state = state;
+					gDirtyNodeArray.push( gate.dstNodeB );
+				}				
+			}
+		}
+	}
+	gDirtyNodeArray = gDirtyNodeArray.slice( arrLen );
+
+	gWaveform.push( gNodeArray[ 2 ].state );
+	gCurrCycle += 1;	
+	console.log( gDirtyNodeArray.length )
 }
 
 var Clear = function()
 {
-	ctx.fillStyle = '#8ECCBC';
 	ctx.clearRect( 0, 0, WIDTH, HEIGHT );
+
+	ctx.fillStyle = '#8ECCBC';	
 	ctx.beginPath();
 	ctx.rect( 0, 0, WIDTH, HEIGHT );
 	ctx.closePath();
@@ -85,10 +161,19 @@ var DrawGrid = function()
 		{
 			if ( gNodeArray[ x + y * NODE_NUM_X ] && gNodeArray[ x + y * NODE_NUM_X ].connRight )
 			{
+				//ctx.save();
+				//ctx.shadowColor = '#999';
+				//ctx.shadowBlur = 10;
+				//ctx.shadowOffsetX = 3;
+				//ctx.shadowOffsetY = 3;
 				ctx.beginPath();
 				ctx.moveTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.lineTo( GRID_OFF_X + ( x + 1 ) * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.stroke();
+				//ctx.fill();
+				//ctx.shadowOffsetX = 0;
+				//ctx.shadowOffsetY = 0;	
+				//ctx.restore();
 			}
 			
 			if ( gNodeArray[ x + y * NODE_NUM_X ] && gNodeArray[ x + y * NODE_NUM_X ].connDown )
@@ -101,19 +186,28 @@ var DrawGrid = function()
 		}
 	}
 	
-	ctx.save();
-	ctx.translate( GRID_OFF_X + 0.5 * TILE_W, GRID_OFF_Y + 0.5 * TILE_H );
-	ctx.rotate( 0.5 * Math.PI )
-	DrawAND( 0, 0 )
-	ctx.restore();
+	// draw gates
+	var arrLen = gGateArray.length;
+	for ( var i = 0; i < arrLen; ++i )
+	{
+		ctx.save();
+		ctx.translate( GRID_OFF_X + ( gGateArray[ i ].nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + ( gGateArray[ i ].nodeY + 0.5 ) * TILE_H );
+		ctx.rotate( gGateArray[ i ].rotation )
+		DrawAND( 0, 0 )
+		ctx.restore();	
+	}
 
 	ctx.fillStyle 	= 'green';
-	ctx.strokeStyle = '#FFDD00';	
 	ctx.lineWidth 	= 2;
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
 		for ( var x = 0; x < NODE_NUM_X; ++x )
 		{
+			if ( gNodeArray[ x + y * NODE_NUM_X ].state == 0 )
+				ctx.strokeStyle = '#FFDD00';
+			else
+				ctx.strokeStyle = '#FF0000';
+		
 		    ctx.beginPath();
 			ctx.arc( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H, 4, 0, 2 * Math.PI, false );
 			ctx.fill();
@@ -122,7 +216,7 @@ var DrawGrid = function()
 	}
 };
 
-var DrawWaveform = function()
+var DrawTestBench = function()
 {
 	var posX 	= 20;
 	var posY 	= 400;
@@ -173,6 +267,21 @@ var DrawHUD = function()
 	ctx.fillText( "CLOCK", posX, posY + entryW * 5 );
 	
 	ctx.fillText( "STEP", posX, posY + entryW * 6 );
+	
+	
+	// buttons
+	var buttonArrLen = gButtonArray.length;
+	for ( var i = 0; i < buttonArrLen; ++i )
+	{
+		var button = gButtonArray[ i ];
+
+		ctx.strokeStyle = 'black';
+		ctx.lineWidth = 2;
+		ctx.beginPath();		
+		ctx.rect( button.posX, button.posY, button.width, button.height );
+		ctx.closePath();
+		ctx.stroke();		
+	}	
 };
 
 var DrawDesc = function()
@@ -235,10 +344,20 @@ document.onmouseup = function()
 		{
 			SwitchConnector( tileX + 1, tileY, false );
 		}
-	}
-	else
-	{
-		Simulate();
+		
+		var buttonArrLen = gButtonArray.length;
+		for ( var i = 0; i < buttonArrLen; ++i )
+		{
+			var button = gButtonArray[ i ];
+			
+			if ( gMousePosX >= button.posX && gMousePosX <= button.posX + button.width && gMousePosY >= button.posY && gMousePosY <= button.posY + button.height )
+			{
+				if ( i == 0 )
+				{
+					Simulate();	
+				}
+			}
+		}
 	}
 }
 
@@ -252,7 +371,7 @@ var GameLoop = function()
 {
 	Clear();
 	DrawGrid();	
-	DrawWaveform();
+	DrawTestBench();
 	DrawHUD();
 	DrawDesc();
 	gLoop = setTimeout(GameLoop, 1000 / 50);
