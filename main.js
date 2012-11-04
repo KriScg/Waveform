@@ -4,7 +4,7 @@ var WIDTH 			= 640,
 	TILE_H 			= 36,
 	NODE_NUM_X 		= 10,
 	NODE_NUM_Y 		= 10,
-	GRID_OFF_X		= 20,
+	GRID_OFF_X		= 50,
 	GRID_OFF_Y		= 20,
 	gLoop,
 	c 				= document.getElementById('c'), 
@@ -20,14 +20,22 @@ var gWaveform  		= new Array();
 var gDirtyNodeArray	= new Array();
 var gButtonArray	= new Array();
 
+var GateTypeEnum =
+{
+	NOT	: 0,
+	AND	: 1,
+	OR	: 2
+}
+
 for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 {
 	gNodeArray[ i ] = { enabled:true, connDown:false, connRight:false, state:0 };
 }
 
-gButtonArray.push( { posX:20, posY:430, width:30, height:30  } );
-gButtonArray.push( { posX:50, posY:430, width:30, height:30  } );
-gGateArray.push( { srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
+gButtonArray.push( { posX:20, posY:430, width:30, height:30 } );
+gButtonArray.push( { posX:50, posY:430, width:30, height:30 } );
+gButtonArray.push( { posX:500, posY:10, width:30, height:30 } );
+gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
 gNodeArray[ 0 ].state = 1;
 gDirtyNodeArray.push( 0 );
 
@@ -80,29 +88,38 @@ var Simulate = function()
 		}
 		
 		// gates
-		var arrLen = gGateArray.length;
-		for ( var j = 0; j < arrLen; ++j )
+		var gateArrLen = gGateArray.length;
+		for ( var j = 0; j < gateArrLen; ++j )
 		{
 			var gate = gGateArray[ j ];
 			if ( gate.srcNodeA == nodeID || gate.srcNodeB == nodeID )
 			{
-				var state = gNodeArray[ gate.srcNodeA ].state == 1 && gNodeArray[ gate.srcNodeB ].state == 1 ? 1 : 0;
+				var newState 	= 0;
+				var stateA 		= gNodeArray[ gate.srcNodeA ].state;
+				var stateB 		= gNodeArray[ gate.srcNodeB ].state;
 				
-				if ( gNodeArray[ gate.dstNodeA ].state != state )
+				switch ( gate.type )
 				{
-					gNodeArray[ gate.dstNodeA ].state = state;
+					case GateTypeEnum.NOT: 	newState = stateA == 1 ? 0 : 1;	break;
+					case GateTypeEnum.AND: 	newState = stateA == 1 && stateB == 1 ? 1 : 0; break;
+					case GateTypeEnum.OR: 	newState = stateA == 1 || stateB == 1 ? 1 : 0; break;
+				}
+
+				if ( gNodeArray[ gate.dstNodeA ].state != newState )
+				{
+					gNodeArray[ gate.dstNodeA ].state = newState;
 					gDirtyNodeArray.push( gate.dstNodeA );
 				}
 				
-				if ( gNodeArray[ gate.dstNodeB ].state != state )
+				if ( gNodeArray[ gate.dstNodeB ].state != newState )
 				{
-					gNodeArray[ gate.dstNodeB ].state = state;
+					gNodeArray[ gate.dstNodeB ].state = newState;
 					gDirtyNodeArray.push( gate.dstNodeB );
 				}				
 			}
 		}
 	}
-	gDirtyNodeArray = gDirtyNodeArray.slice( arrLen );
+	gDirtyNodeArray = gDirtyNodeArray.slice( dirtyNodeArrLen );
 
 	gWaveform.push( gNodeArray[ 2 ].state );
 	gCurrCycle += 1;	
@@ -118,37 +135,6 @@ var Clear = function()
 	ctx.rect( 0, 0, WIDTH, HEIGHT );
 	ctx.closePath();
 	ctx.fill();
-}
-
-var DrawAND = function( posX, posY )
-{
-	var size = 10;
-	ctx.strokeStyle = 'black';
-	ctx.lineWidth = 2;
-	ctx.beginPath();
-	
-	ctx.arc( posX, posY, size, 1.5 * Math.PI, 0.5 * Math.PI, false );
-	
-	ctx.moveTo( posX, posY - size );
-	ctx.lineTo( posX - size, posY - size );
-	ctx.lineTo( posX - size, posY + size );
-	ctx.lineTo( posX, posY + size );
-	
-	// inputs
-	ctx.moveTo( posX - size, posY - size * 0.5 );
-	ctx.lineTo( posX - 0.5 * TILE_W, posY - size * 0.5 );
-	ctx.lineTo( posX - 0.5 * TILE_W, posY - size * 2 );
-	ctx.moveTo( posX - size, posY + size * 0.5 );
-	ctx.lineTo( posX - 0.5 * TILE_W, posY + size * 0.5 );
-	ctx.lineTo( posX - 0.5 * TILE_W, posY + size * 2 );
-	
-	// outputs
-	ctx.moveTo( posX + size, posY );
-	ctx.lineTo( posX + 0.5 * TILE_W, posY );
-	ctx.lineTo( posX + 0.5 * TILE_W, posY - size * 2 );
-	ctx.moveTo( posX + 0.5 * TILE_W, posY );
-	ctx.lineTo( posX + 0.5 * TILE_W, posY + size * 2 );
-	ctx.stroke();
 }
 
 var DrawGrid = function()
@@ -190,11 +176,7 @@ var DrawGrid = function()
 	var arrLen = gGateArray.length;
 	for ( var i = 0; i < arrLen; ++i )
 	{
-		ctx.save();
-		ctx.translate( GRID_OFF_X + ( gGateArray[ i ].nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + ( gGateArray[ i ].nodeY + 0.5 ) * TILE_H );
-		ctx.rotate( gGateArray[ i ].rotation )
-		DrawAND( 0, 0 )
-		ctx.restore();	
+		DrawGate( gGateArray[ i ].type, gGateArray[ i ].nodeX, gGateArray[ i ].nodeY, gGateArray[ i ].rotation )
 	}
 
 	ctx.fillStyle 	= 'green';
@@ -325,9 +307,26 @@ document.onmouseup = function()
 		var tileY 		= Math.floor( posY );
 		var tileSubPosX = posX - tileX;
 		var tileSubPosY = posY - tileY;
+		//console.log( "mousePos:", gMousePosX, gMousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );		
+		
+		// gates
+		var gateArrLen = gGateArray.length;
+		for ( var i = 0; i < gateArrLen; ++i )
+		{
+			var gate = gGateArray[ i ];
+			if ( tileX == gate.nodeX && tileY == gate.nodeY )
+			{
+				var tmp = gate.srcNodeA;
+				gate.srcNodeA = gate.dstNodeA;
+				gate.dstNodeA = gate.dstNodeB;
+				gate.dstNodeB = gate.srcNodeB;
+				gate.srcNodeB = tmp;
+				gate.rotation += 0.5 * Math.PI;
+				return;
+			}
+		}		
 	
-		//console.log( "mousePos:", gMousePosX, gMousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );
-
+		// connectors
 		if ( tileSubPosX > tileSubPosY && tileSubPosX < 1 - tileSubPosY )
 		{
 			SwitchConnector( tileX, tileY, true );
@@ -345,6 +344,7 @@ document.onmouseup = function()
 			SwitchConnector( tileX + 1, tileY, false );
 		}
 		
+		// buttons
 		var buttonArrLen = gButtonArray.length;
 		for ( var i = 0; i < buttonArrLen; ++i )
 		{
