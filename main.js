@@ -11,8 +11,6 @@ var WIDTH 			= 640,
 	ctx 			= c.getContext('2d');			
 	c.width 		= WIDTH;
 	c.height 		= HEIGHT;
-var gMousePosX 		= 0;
-var gMousePosY 		= 0;
 var gNodeArray 		= new Array();
 var gGateArray		= new Array();
 var gCurrCycle 		= 0;
@@ -29,19 +27,21 @@ var GateTypeEnum =
 
 for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 {
-	gNodeArray[ i ] = { enabled:true, connDown:false, connRight:false, state:0 };
+	gNodeArray[ i ] = { enabled:true, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
 }
 
-gButtonArray.push( { posX:20, posY:430, width:30, height:30 } );
-gButtonArray.push( { posX:50, posY:430, width:30, height:30 } );
-gButtonArray.push( { posX:500, posY:10, width:30, height:30 } );
+gButtonArray.push( { posX:20, posY:430, width:30, height:30, text:"verify" } );
+gButtonArray.push( { posX:50, posY:430, width:30, height:30, text:"abc" } );
+gButtonArray.push( { posX:500, posY:10, width:30, height:30, text:"NOT" } );
 gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
-gNodeArray[ 0 ].state = 1;
-gDirtyNodeArray.push( 0 );
 
 
 var Simulate = function()
 {
+	// inputs
+	gNodeArray[ 0 ].state = 1;
+	gDirtyNodeArray.push( 0 );
+
 	var dirtyNodeArrLen = gDirtyNodeArray.length;
 	for ( var i = 0; i < dirtyNodeArrLen; ++i )
 	{
@@ -52,8 +52,9 @@ var Simulate = function()
 		{
 			if ( gNodeArray[ nodeID + 1 ].state != gNodeArray[ nodeID ].state )
 			{
-				gNodeArray[ nodeID + 1 ].state = gNodeArray[ nodeID ].state
-				gDirtyNodeArray.push( nodeID + 1 )
+				gNodeArray[ nodeID + 1 ].state = gNodeArray[ nodeID ].state;
+				gNodeArray[ nodeID ].connRightState = gNodeArray[ nodeID ].state;
+				gDirtyNodeArray.push( nodeID + 1 );
 			}
 		}
 		
@@ -63,7 +64,8 @@ var Simulate = function()
 			if ( gNodeArray[ nodeID + NODE_NUM_X ].state != gNodeArray[ nodeID ].state )
 			{
 				gNodeArray[ nodeID + NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
-				gDirtyNodeArray.push( nodeID + NODE_NUM_X )
+				gNodeArray[ nodeID ].connDownState = gNodeArray[ nodeID ].state;
+				gDirtyNodeArray.push( nodeID + NODE_NUM_X );
 			}
 		}
 		
@@ -73,6 +75,7 @@ var Simulate = function()
 			if ( gNodeArray[ nodeID - 1 ].state != gNodeArray[ nodeID ].state )
 			{		
 				gNodeArray[ nodeID - 1 ].state = gNodeArray[ nodeID ].state;
+				gNodeArray[ nodeID - 1 ].connRightState = gNodeArray[ nodeID ].state;
 				gDirtyNodeArray.push( nodeID - 1 )
 			}
 		}
@@ -83,6 +86,7 @@ var Simulate = function()
 			if ( gNodeArray[ nodeID - NODE_NUM_X ].state != gNodeArray[ nodeID ].state )
 			{
 				gNodeArray[ nodeID - NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
+				gNodeArray[ nodeID - NODE_NUM_X ].connDownState = gNodeArray[ nodeID ].state;
 				gDirtyNodeArray.push( nodeID - NODE_NUM_X )			
 			}
 		}
@@ -147,6 +151,11 @@ var DrawGrid = function()
 		{
 			if ( gNodeArray[ x + y * NODE_NUM_X ] && gNodeArray[ x + y * NODE_NUM_X ].connRight )
 			{
+				if ( gNodeArray[ x + y * NODE_NUM_X ].connRightState == 0 )
+					ctx.strokeStyle = '#FFDD00';
+				else
+					ctx.strokeStyle = '#FF0000';
+
 				//ctx.save();
 				//ctx.shadowColor = '#999';
 				//ctx.shadowBlur = 10;
@@ -164,6 +173,11 @@ var DrawGrid = function()
 			
 			if ( gNodeArray[ x + y * NODE_NUM_X ] && gNodeArray[ x + y * NODE_NUM_X ].connDown )
 			{
+				if ( gNodeArray[ x + y * NODE_NUM_X ].connDownState == 0 )
+					ctx.strokeStyle = '#FFDD00';
+				else
+					ctx.strokeStyle = '#FF0000';
+			
 				ctx.beginPath();
 				ctx.moveTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.lineTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + ( y + 1 ) * TILE_H );
@@ -258,11 +272,13 @@ var DrawHUD = function()
 		var button = gButtonArray[ i ];
 
 		ctx.strokeStyle = 'black';
+		ctx.textAlign = 'center';
 		ctx.lineWidth = 2;
 		ctx.beginPath();		
 		ctx.rect( button.posX, button.posY, button.width, button.height );
 		ctx.closePath();
-		ctx.stroke();		
+		ctx.stroke();	
+		ctx.fillText( button.text, button.posX + button.width * 0.5, button.posY + button.height * 0.5 );
 	}	
 };
 
@@ -297,17 +313,19 @@ var SwitchConnector = function( nodeX, nodeY, right )
 	}
 }
 
-document.onmouseup = function()
+document.onmouseup = function( e )
 {
-	if ( gMousePosX >= 0 && gMousePosY >= 0 )
-	{		
-		var posX  		= ( gMousePosX - GRID_OFF_X ) / TILE_W;
-		var posY  		= ( gMousePosY - GRID_OFF_Y ) / TILE_H;
+	var mousePosX = e.pageX - c.offsetLeft;
+	var mousePosY = e.pageY - c.offsetTop;
+	if ( mousePosX >= 0 && mousePosY >= 0 )
+	{
+		var posX  		= ( mousePosX - GRID_OFF_X ) / TILE_W;
+		var posY  		= ( mousePosY - GRID_OFF_Y ) / TILE_H;
 		var tileX 		= Math.floor( posX );
 		var tileY 		= Math.floor( posY );
 		var tileSubPosX = posX - tileX;
 		var tileSubPosY = posY - tileY;
-		//console.log( "mousePos:", gMousePosX, gMousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );		
+		//console.log( "mousePos:", mousePosX, mousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );		
 		
 		// gates
 		var gateArrLen = gGateArray.length;
@@ -350,7 +368,7 @@ document.onmouseup = function()
 		{
 			var button = gButtonArray[ i ];
 			
-			if ( gMousePosX >= button.posX && gMousePosX <= button.posX + button.width && gMousePosY >= button.posY && gMousePosY <= button.posY + button.height )
+			if ( mousePosX >= button.posX && mousePosX <= button.posX + button.width && mousePosY >= button.posY && mousePosY <= button.posY + button.height )
 			{
 				if ( i == 0 )
 				{
@@ -359,12 +377,6 @@ document.onmouseup = function()
 			}
 		}
 	}
-}
-
-document.onmousemove = function( e )
-{
-	gMousePosX = e.pageX - c.offsetLeft;
-	gMousePosY = e.pageY - c.offsetTop;
 }
 
 var GameLoop = function()
