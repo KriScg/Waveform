@@ -4,7 +4,7 @@ var WIDTH 			= 600,
 	TILE_H 			= 36,
 	NODE_NUM_X 		= 10,
 	NODE_NUM_Y 		= 10,
-	GRID_OFF_X		= 30,
+	GRID_OFF_X		= 50,
 	GRID_OFF_Y		= 30,
 	gLoop,
 	c 				= document.getElementById('c'), 
@@ -13,14 +13,11 @@ var WIDTH 			= 600,
 	c.height 		= HEIGHT;
 var gNodeArray 		= new Array();
 var gGateArray		= new Array();
-var gCurrCycle 		= 0;
-var gWaveform  		= new Array();
-var gWaveformInputA = new Array( 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0 );
-var gWaveformInputB = new Array( 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0 );
-var gWaveformInputC = new Array( 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1 );
-var gWaveformOutput = new Array( 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 );
 var gDirtyNodeArray	= new Array();
 var gButtonArray	= new Array();
+var gInputsArray 	= new Array();
+var gOutput			= { name:"Output", nodeX:9, nodeY:5 };
+var gSimulator		= { cycle:0, subCycle:0, waveform:new Array() };
 
 var GateTypeEnum =
 {
@@ -29,6 +26,14 @@ var GateTypeEnum =
 	OR	: 2
 }
 
+gInputsArray[ 0 ] = { name:"InputA", nodeX:0, nodeY:5 };
+gInputsArray[ 0 ].waveform = new Array( 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0 );
+gInputsArray[ 1 ] = { name:"InputB", nodeX:0, nodeY:8 };
+gInputsArray[ 1 ].waveform = new Array( 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0 );
+gInputsArray[ 2 ] = { name:"InputC", nodeX:0, nodeY:9 };
+gInputsArray[ 2 ].waveform = new Array( 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1 );
+gOutput.waveform = new Array( 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 );
+
 for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 {
 	gNodeArray[ i ] = { enabled:true, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
@@ -36,15 +41,34 @@ for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 
 gButtonArray.push( { posX:300, posY:380, width:30, height:30, text:"verify" } );
 gButtonArray.push( { posX:330, posY:380, width:30, height:30, text:"abc" } );
-gButtonArray.push( { posX:500, posY:10, width:30, height:30, text:"NOT" } );
-gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
+//gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
 
 
-var Simulate = function()
+var SimulateCycle = function()
+{
+	for ( var i = 0; i < 20; ++i )
+	{
+		gSimulator.subCycle = i;
+		SimulateSubCycle()
+	}
+
+	// outputs
+	gSimulator.waveform.push( gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state );
+	gSimulator.cycle += 1;
+	console.log( gDirtyNodeArray.length )	
+}
+
+var SimulateSubCycle = function()
 {
 	// inputs
-	gNodeArray[ 0 ].state = 1;
-	gDirtyNodeArray.push( 0 );
+	var arrLen = gInputsArray.length;
+	for ( var i = 0; i < arrLen; ++i )
+	{
+		var input = gInputsArray[ i ];
+		var nodeID = input.nodeX + input.nodeY * NODE_NUM_X;
+		gNodeArray[ nodeID ].state = input.waveform[ gSimulator.cycle ];
+		gDirtyNodeArray.push( nodeID );
+	}
 
 	var dirtyNodeArrLen = gDirtyNodeArray.length;
 	for ( var i = 0; i < dirtyNodeArrLen; ++i )
@@ -128,10 +152,7 @@ var Simulate = function()
 		}
 	}
 	gDirtyNodeArray = gDirtyNodeArray.slice( dirtyNodeArrLen );
-
-	gWaveform.push( gNodeArray[ 2 ].state );
-	gCurrCycle += 1;	
-	console.log( gDirtyNodeArray.length )
+	gSimulator.currSubcycle += 1;
 }
 
 var Clear = function()
@@ -147,6 +168,33 @@ var Clear = function()
 
 var DrawGrid = function()
 {
+	// inputs and outputs
+	ctx.strokeStyle = '#FFDD00';
+	ctx.fillStyle = 'black';
+	ctx.font = '10px Arial';
+	ctx.textAlign = 'right';
+	ctx.lineWidth = 2;
+	
+	var arrLen = gInputsArray.length;
+	for ( var i = 0; i < arrLen; ++i )
+	{
+		var input = gInputsArray[ i ];
+		ctx.fillText( input.name, GRID_OFF_X - 10 + input.nodeX * TILE_W, GRID_OFF_Y - 6 + input.nodeY * TILE_H );
+		ctx.beginPath();
+		ctx.moveTo( GRID_OFF_X - 20 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
+		ctx.lineTo( GRID_OFF_X + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
+		ctx.stroke();	
+	}
+	
+	ctx.textAlign = 'left';
+	ctx.fillText( gOutput.name, GRID_OFF_X + 10 + gOutput.nodeX * TILE_W, GRID_OFF_Y - 6 + gOutput.nodeY * TILE_H );
+	ctx.beginPath();
+	ctx.moveTo( GRID_OFF_X + 20 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.stroke();	
+	
+
+
 	ctx.strokeStyle = '#FFDD00';
 	ctx.lineWidth 	= 3;
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
@@ -249,37 +297,23 @@ var DrawTestBench = function()
 	ctx.fillStyle = 'black';
 	ctx.font = '10px Arial';
 	ctx.textAlign = 'left';
-	ctx.fillText( "WAVEFORMS Cycle: " + gCurrCycle.toString() + "/20", posX, posY - 10 );
+	ctx.fillText( "WAVEFORMS Cycle: " + gSimulator.cycle.toString() + "/20", posX, posY - 10 );
 	ctx.textAlign = 'center';	
 	
-	DrawWaveform( posX, posY, width, height, "InputA", gWaveformInputA );
-	DrawWaveform( posX, posY + height * 2.5, width, height, "InputB", gWaveformInputB );
-	DrawWaveform( posX, posY + height * 5, width, height, "InputC", gWaveformInputC );
-	DrawWaveform( posX, posY + height * 7.5, width, height, "Output", gWaveformOutput, true );	
-	DrawWaveform( posX, posY + height * 7.5, width, height, "Output", gWaveform );
+	var arrLen = gInputsArray.length;
+	for ( var i = 0; i < arrLen; ++i )
+	{
+		var input = gInputsArray[ i ];
+		DrawWaveform( posX, posY, width, height, input.name, input.waveform );	
+		posY += height * 2.5;
+	}
+
+	DrawWaveform( posX, posY, width, height, "Output", gOutput.waveform, true );
+	DrawWaveform( posX, posY, width, height, "Output", gSimulator.waveform );
 };
 
 var DrawHUD = function()
-{
-	var posX 	= 460;
-	var posY 	= 40;
-	var entryW 	= 20;
-
-	ctx.fillStyle = 'black';
-	ctx.font = '10px Arial';
-	ctx.textAlign = 'center';
-	ctx.fillText( "ERASE", posX, posY );
-	ctx.fillStyle = 'red';
-	ctx.fillText( "CONNECT", posX, posY + entryW );
-	ctx.fillStyle = 'black';
-	ctx.fillText( "OR", posX, posY + entryW * 2 );
-	ctx.fillText( "AND", posX, posY + entryW * 3 );
-	ctx.fillText( "MUX2x1", posX, posY + entryW * 4 );
-	ctx.fillText( "CLOCK", posX, posY + entryW * 5 );
-	
-	ctx.fillText( "STEP", posX, posY + entryW * 6 );
-	
-	
+{	
 	// buttons
 	var buttonArrLen = gButtonArray.length;
 	for ( var i = 0; i < buttonArrLen; ++i )
@@ -387,7 +421,7 @@ document.onmouseup = function( e )
 			{
 				if ( i == 0 )
 				{
-					Simulate();	
+					SimulateCycle();	
 				}
 			}
 		}
