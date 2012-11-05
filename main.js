@@ -40,9 +40,34 @@ for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
 }
 
 gButtonArray.push( { posX:300, posY:380, width:30, height:30, text:"verify" } );
-gButtonArray.push( { posX:330, posY:380, width:30, height:30, text:"abc" } );
+gButtonArray.push( { posX:330, posY:380, width:30, height:30, text:"step" } );
+gButtonArray.push( { posX:360, posY:380, width:30, height:30, text:"stop" } );
 //gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
 
+var SimulateReset = function()
+{
+	gSimulator.cycle 			= 0;
+	gSimulator.subCycle 		= 0;
+	gSimulator.waveform.length 	= 0;
+	gDirtyNodeArray.length		= 0;
+
+	var arrLen = gNodeArray.length;
+	for ( var i = 0; i < arrLen; ++i )
+	{
+		gNodeArray[ i ].connDownState 	= 0;
+		gNodeArray[ i ].connRightState 	= 0;
+		gNodeArray[ i ].state			= 0;
+	}
+}
+
+var Simulate = function()
+{
+	SimulateReset();
+	for ( var i = 0; i < 20; ++i )
+	{
+		SimulateCycle();
+	}
+}
 
 var SimulateCycle = function()
 {
@@ -419,9 +444,11 @@ document.onmouseup = function( e )
 			
 			if ( mousePosX >= button.posX && mousePosX <= button.posX + button.width && mousePosY >= button.posY && mousePosY <= button.posY + button.height )
 			{
-				if ( i == 0 )
+				switch ( i )
 				{
-					SimulateCycle();	
+					case 0: Simulate(); break;
+					case 1: SimulateCycle(); break;
+					case 2: SimulateReset(); break;
 				}
 			}
 		}
