@@ -61,6 +61,11 @@ var InitLevel = function( levelID )
 			{
 				gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:i, srcNodeB:i+NODE_NUM_X, dstNodeA:i+1, dstNodeB:i+1+NODE_NUM_X, nodeX:x, nodeY:y, rotation:0 } );
 			}
+			
+			if ( level.nodes[ i ] == 3 )
+			{
+				gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:i, srcNodeB:i+NODE_NUM_X, dstNodeA:i+1, dstNodeB:i+1+NODE_NUM_X, nodeX:x, nodeY:y, rotation:0 } );
+			}			
 		}
 	}
 	
@@ -409,13 +414,11 @@ var SwitchConnector = function( nodeX, nodeY, right )
 document.onkeydown = function( e )
 {
 	// tempshit debug stuff
-	if ( e.keyCode == 97 )
+	switch ( e.keyCode )
 	{
-		InitLevel( 0 );
-	} 
-	else if ( e.keyCode == 98 )
-	{
-		InitLevel( 1 );
+		case 97: InitLevel( 0 ); break;
+		case 98: InitLevel( 1 ); break;
+		case 99: InitLevel( 2 ); break;
 	}
 }
 
