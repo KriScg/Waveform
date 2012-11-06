@@ -1,4 +1,3 @@
-
 var DrawGate = function( type, nodeX, nodeY, rotation )
 {
 	ctx.save();

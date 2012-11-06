@@ -16,33 +16,13 @@ var gGateArray		= new Array();
 var gDirtyNodeArray	= new Array();
 var gButtonArray	= new Array();
 var gInputsArray 	= new Array();
-var gOutput			= { name:"Output", nodeX:9, nodeY:5 };
+var gOutput;
 var gSimulator		= { cycle:0, subCycle:0, waveform:new Array() };
-
-var GateTypeEnum =
-{
-	NOT	: 0,
-	AND	: 1,
-	OR	: 2
-}
-
-gInputsArray[ 0 ] = { name:"InputA", nodeX:0, nodeY:5 };
-gInputsArray[ 0 ].waveform = new Array( 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0 );
-gInputsArray[ 1 ] = { name:"InputB", nodeX:0, nodeY:8 };
-gInputsArray[ 1 ].waveform = new Array( 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0 );
-gInputsArray[ 2 ] = { name:"InputC", nodeX:0, nodeY:9 };
-gInputsArray[ 2 ].waveform = new Array( 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1 );
-gOutput.waveform = new Array( 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 );
-
-for ( var i = 0; i < NODE_NUM_X * NODE_NUM_Y; ++i )
-{
-	gNodeArray[ i ] = { enabled:true, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
-}
+var gCurrLevelID	= 0;
 
 gButtonArray.push( { posX:300, posY:380, width:30, height:30, text:"verify" } );
 gButtonArray.push( { posX:330, posY:380, width:30, height:30, text:"step" } );
 gButtonArray.push( { posX:360, posY:380, width:30, height:30, text:"stop" } );
-//gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:1, srcNodeB:11, dstNodeA:2, dstNodeB:12, nodeX:1, nodeY:0, rotation:0 } );
 
 var SimulateReset = function()
 {
@@ -59,6 +39,35 @@ var SimulateReset = function()
 		gNodeArray[ i ].state			= 0;
 	}
 }
+
+var InitLevel = function( levelID )
+{
+	gCurrLevelID = levelID;
+	var level = gLevels[ levelID ];
+	
+	gOutput 			= level.output;
+	gInputsArray 		= level.inputs;
+	gGateArray.length 	= 0;
+
+	for ( var y = 0; y < NODE_NUM_Y; ++y )
+	{
+		for ( var x = 0; x < NODE_NUM_X; ++x )
+		{
+			var i = x + y * NODE_NUM_X;
+			
+			gNodeArray[ i ] = { enabled:level.nodes[ i ] != 0, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
+
+			if ( level.nodes[ i ] == 2 )
+			{
+				gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:i, srcNodeB:i+NODE_NUM_X, dstNodeA:i+1, dstNodeB:i+1+NODE_NUM_X, nodeX:x, nodeY:y, rotation:0 } );
+			}
+		}
+	}
+	
+	SimulateReset();
+}
+
+InitLevel( 0 );
 
 var Simulate = function()
 {
@@ -226,7 +235,7 @@ var DrawGrid = function()
 	{
 		for ( var x = 0; x < NODE_NUM_X; ++x )
 		{
-			if ( gNodeArray[ x + y * NODE_NUM_X ] && gNodeArray[ x + y * NODE_NUM_X ].connRight )
+			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled && gNodeArray[ x + y * NODE_NUM_X ].connRight )
 			{
 				if ( gNodeArray[ x + y * NODE_NUM_X ].connRightState == 0 )
 					ctx.strokeStyle = '#FFDD00';
@@ -248,7 +257,7 @@ var DrawGrid = function()
 				//ctx.restore();
 			}
 			
-			if ( gNodeArray[ x + y * NODE_NUM_X ] && gNodeArray[ x + y * NODE_NUM_X ].connDown )
+			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled && gNodeArray[ x + y * NODE_NUM_X ].connDown )
 			{
 				if ( gNodeArray[ x + y * NODE_NUM_X ].connDownState == 0 )
 					ctx.strokeStyle = '#FFDD00';
@@ -276,15 +285,18 @@ var DrawGrid = function()
 	{
 		for ( var x = 0; x < NODE_NUM_X; ++x )
 		{
-			if ( gNodeArray[ x + y * NODE_NUM_X ].state == 0 )
-				ctx.strokeStyle = '#FFDD00';
-			else
-				ctx.strokeStyle = '#FF0000';
-		
-		    ctx.beginPath();
-			ctx.arc( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H, 4, 0, 2 * Math.PI, false );
-			ctx.fill();
-			ctx.stroke();
+			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled )
+			{
+				if ( gNodeArray[ x + y * NODE_NUM_X ].state == 0 )
+					ctx.strokeStyle = '#FFDD00';
+				else
+					ctx.strokeStyle = '#FF0000';
+
+				ctx.beginPath();
+				ctx.arc( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H, 4, 0, 2 * Math.PI, false );
+				ctx.fill();
+				ctx.stroke();
+			}
 		}
 	}
 };
@@ -366,24 +378,44 @@ var DrawDesc = function()
 	ctx.font 		= '10px Arial';
 	ctx.fillStyle 	= 'black';	
 	ctx.textAlign 	= 'center';	
-	ctx.fillText( ".01 - POWER ON", 530, 400 );
-	ctx.fillText( "Route power from @clk to @out", 530, 420 );
+	ctx.fillText( gLevels[ gCurrLevelID ].name, 530, 400 );
+	ctx.fillText( gLevels[ gCurrLevelID ].desc, 530, 420 );
 };
 
 var SwitchConnector = function( nodeX, nodeY, right )
 {
 	if ( nodeX >= 0 && nodeY >= 0 && nodeX < NODE_NUM_X && nodeY < NODE_NUM_Y )
 	if ( nodeX + 1 < NODE_NUM_X || !right )
-	if ( nodeY + 1 < NODE_NUM_X || right )	
+	if ( nodeY + 1 < NODE_NUM_X || right )
+	if ( gNodeArray[ nodeX + nodeY * NODE_NUM_X ].enabled )
 	{
 		if ( right )
 		{
-			gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight;
+			if ( gNodeArray[ nodeX + 1 + nodeY * NODE_NUM_X ].enabled )
+			{
+				gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight;
+			}
 		}
 		else
 		{
-			gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown;
+			if ( gNodeArray[ nodeX + ( nodeY + 1 ) * NODE_NUM_X ].enabled )
+			{		
+				gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown;
+			}
 		}
+	}
+}
+
+document.onkeydown = function( e )
+{
+	// tempshit debug stuff
+	if ( e.keyCode == 97 )
+	{
+		InitLevel( 0 );
+	} 
+	else if ( e.keyCode == 98 )
+	{
+		InitLevel( 1 );
 	}
 }
 
@@ -402,6 +434,7 @@ document.onmouseup = function( e )
 		//console.log( "mousePos:", mousePosX, mousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );		
 		
 		// gates
+		/*
 		var gateArrLen = gGateArray.length;
 		for ( var i = 0; i < gateArrLen; ++i )
 		{
@@ -416,7 +449,8 @@ document.onmouseup = function( e )
 				gate.rotation += 0.5 * Math.PI;
 				return;
 			}
-		}		
+		}
+		*/
 	
 		// connectors
 		if ( tileSubPosX > tileSubPosY && tileSubPosX < 1 - tileSubPosY )

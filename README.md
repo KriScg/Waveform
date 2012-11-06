@@ -2,4 +2,4 @@
 Non playable
 
 ## Overview
-**Clone** existing digital designs by reverse engineering using provided waveforms. Lay down connections, **branch** the digital signal, soldner electronic gates etc.
+Repair circuit boards by **cloning** provided output waveform. **Branch** digital signal, connect board nodes, connect logic gates like AND, OR, NOT etc.
