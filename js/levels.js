@@ -7,9 +7,9 @@ var GateTypeEnum =
 
 var gLevels = new Array
 (
-	// level 0
+	// level 1
 	{ 
-		name:".00 Power ON",
+		name:".01 Routing",
 		desc:"Route clock from input to output.",
 		nodes:new Array
 		(
@@ -42,9 +42,9 @@ var gLevels = new Array
 		),
 	},
 	
-	// level 1
+	// level 2
 	{
-		name:".01 Inverted",
+		name:".02 Inverted",
 		desc:"Invert clock input and route it to output.",
 		nodes:new Array
 		(
@@ -77,9 +77,9 @@ var gLevels = new Array
 		),
 	},
 	
-	// level 2
+	// level 3
 	{
-		name:".02 Continuous",
+		name:".03 Continuous",
 		desc:"temp desc",
 		nodes:new Array
 		(

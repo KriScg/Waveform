@@ -4,8 +4,8 @@ var WIDTH 			= 600,
 	TILE_H 			= 36,
 	NODE_NUM_X 		= 10,
 	NODE_NUM_Y 		= 10,
-	GRID_OFF_X		= 50,
-	GRID_OFF_Y		= 30,
+	GRID_OFF_X		= 140,
+	GRID_OFF_Y		= 10,
 	gLoop,
 	c 				= document.getElementById('c'), 
 	ctx 			= c.getContext('2d');			
@@ -21,9 +21,9 @@ var gSimulator		= { cycle:0, subCycle:0, waveform:new Array() };
 var gCurrLevelID	= 0;
 var gStateToColor 	= new Array( "#FFDD00", "#FF0000", "#FF00FF" );
 
-gButtonArray.push( { posX:300, posY:380, width:30, height:30, text:"verify" } );
-gButtonArray.push( { posX:330, posY:380, width:30, height:30, text:"step" } );
-gButtonArray.push( { posX:360, posY:380, width:30, height:30, text:"stop" } );
+gButtonArray.push( { posX:300, posY:385, width:30, height:30, text:"verify" } );
+gButtonArray.push( { posX:330, posY:385, width:30, height:30, text:"step" } );
+gButtonArray.push( { posX:360, posY:385, width:30, height:30, text:"stop" } );
 
 var SimulateReset = function()
 {
@@ -86,6 +86,11 @@ var Simulate = function()
 
 var SimulateCycle = function()
 {
+	if ( gSimulator.cycle >= gOutput.waveform.length )
+	{
+		return;
+	}
+
 	for ( var i = 0; i < 20; ++i )
 	{
 		gSimulator.subCycle = i;
@@ -199,16 +204,18 @@ var SimulateSubCycle = function()
 var Clear = function()
 {
 	ctx.clearRect( 0, 0, WIDTH, HEIGHT );
-
-	ctx.fillStyle = '#8ECCBC';	
-	ctx.beginPath();
-	ctx.rect( 0, 0, WIDTH, HEIGHT );
-	ctx.closePath();
-	ctx.fill();
 }
 
 var DrawGrid = function()
 {
+	ctx.strokeStyle = 'black';
+	ctx.fillStyle = '#8ECCBC';	
+	ctx.beginPath();
+	ctx.rect( 0, 0, WIDTH, GRID_OFF_Y + NODE_NUM_Y * TILE_H );
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+
 	// inputs and outputs
 	ctx.strokeStyle = '#FFDD00';
 	ctx.fillStyle = 'black';
@@ -292,7 +299,6 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 	ctx.fillText( text, posX - 30, posY + height * 0.5 );
 	ctx.fillText( "1", posX - 5, posY );
 	ctx.fillText( "0", posX - 5, posY + height );
-
 	ctx.strokeStyle = overlay ? '#888888' : '#000000';
 	ctx.lineWidth = 2;
 	ctx.beginPath();	
@@ -323,15 +329,32 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 var DrawTestBench = function()
 {
 	var posX 	= 60;
-	var posY 	= 420;
+	var posY 	= 430;
 	var width 	= 16;
 	var height 	= 16;
+	
+	ctx.strokeStyle = 'black';
+	ctx.fillStyle = '#F2FADF';	
+	ctx.beginPath();
+	ctx.rect( 0, 370, 600, 600 - 370 );
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
 	
 	ctx.fillStyle = 'black';
 	ctx.font = '10px Arial';
 	ctx.textAlign = 'left';
-	ctx.fillText( "WAVEFORMS Cycle: " + gSimulator.cycle.toString() + "/20", posX, posY - 10 );
+	ctx.fillText( "WAVEFORMS Cycle: " + gSimulator.cycle.toString() + "/20", posX, posY - 20 );
 	ctx.textAlign = 'center';	
+	
+	ctx.strokeStyle = 'gray';
+	ctx.lineWidth = 1;
+	for ( var i = 0; i < gOutput.waveform.length + 1; ++i )
+	{
+		ctx.moveTo( posX + i * width + 0.5, posY + 0.5 - 2 );
+		ctx.lineTo( posX + i * width + 0.5, posY + height * 8 + 0.5 );
+	}
+	ctx.stroke();
 	
 	var arrLen = gInputsArray.length;
 	for ( var i = 0; i < arrLen; ++i )
@@ -356,7 +379,7 @@ var DrawHUD = function()
 		ctx.strokeStyle = 'black';
 		ctx.textAlign = 'center';
 		ctx.lineWidth = 2;
-		ctx.beginPath();		
+		ctx.beginPath();
 		ctx.rect( button.posX, button.posY, button.width, button.height );
 		ctx.closePath();
 		ctx.stroke();	
@@ -366,10 +389,12 @@ var DrawHUD = function()
 
 var DrawDesc = function()
 {
+	ctx.strokeStyle = 'black';
 	ctx.fillStyle = '#F2FACF';
 	ctx.beginPath();
 	ctx.arc( 550, 440, 150, 0, 2 * Math.PI, false );
 	ctx.fill();
+	ctx.stroke();
 	
 	ctx.font 		= '10px Arial';
 	ctx.fillStyle 	= 'black';	
