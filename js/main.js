@@ -19,6 +19,7 @@ var gInputsArray 	= new Array();
 var gOutput;
 var gSimulator		= { cycle:0, subCycle:0, waveform:new Array() };
 var gCurrLevelID	= 0;
+var gStateToColor 	= new Array( "#FFDD00", "#FF0000", "#FF00FF" );
 
 gButtonArray.push( { posX:300, posY:380, width:30, height:30, text:"verify" } );
 gButtonArray.push( { posX:330, posY:380, width:30, height:30, text:"step" } );
@@ -34,9 +35,9 @@ var SimulateReset = function()
 	var arrLen = gNodeArray.length;
 	for ( var i = 0; i < arrLen; ++i )
 	{
-		gNodeArray[ i ].connDownState 	= 0;
-		gNodeArray[ i ].connRightState 	= 0;
-		gNodeArray[ i ].state			= 0;
+		gNodeArray[ i ].connDownState 	= 2;
+		gNodeArray[ i ].connRightState 	= 2;
+		gNodeArray[ i ].state			= 2;
 	}
 }
 
@@ -55,7 +56,7 @@ var InitLevel = function( levelID )
 		{
 			var i = x + y * NODE_NUM_X;
 			
-			gNodeArray[ i ] = { enabled:level.nodes[ i ] != 0, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
+			gNodeArray[ i ] = { enabled:level.nodes[ i ] != 0, connDown:false, connRight:false, connDownState:2, connRightState:2, state:2 };
 
 			if ( level.nodes[ i ] == 2 )
 			{
@@ -106,56 +107,57 @@ var SimulateSubCycle = function()
 		var input = gInputsArray[ i ];
 		var nodeID = input.nodeX + input.nodeY * NODE_NUM_X;
 		gNodeArray[ nodeID ].state = input.waveform[ gSimulator.cycle ];
-		gDirtyNodeArray.push( nodeID );
+		gDirtyNodeArray.push( { currID:nodeID, prevID:-1 } );
 	}
 
 	var dirtyNodeArrLen = gDirtyNodeArray.length;
 	for ( var i = 0; i < dirtyNodeArrLen; ++i )
 	{
-		var nodeID = gDirtyNodeArray[ i ];
-		
+		var nodeID 		= gDirtyNodeArray[ i ].currID;
+		var prevNodeID 	= gDirtyNodeArray[ i ].prevID;
+
 		// right
-		if ( gNodeArray[ nodeID ].connRight )
+		if ( gNodeArray[ nodeID ].connRight && prevNodeID != nodeID + 1 )
 		{
 			if ( gNodeArray[ nodeID + 1 ].state != gNodeArray[ nodeID ].state )
 			{
-				gNodeArray[ nodeID + 1 ].state = gNodeArray[ nodeID ].state;
-				gNodeArray[ nodeID ].connRightState = gNodeArray[ nodeID ].state;
-				gDirtyNodeArray.push( nodeID + 1 );
+				gDirtyNodeArray.push( { currID:nodeID + 1, prevID:nodeID } );
 			}
+			gNodeArray[ nodeID + 1 ].state = gNodeArray[ nodeID ].state;			
+			gNodeArray[ nodeID ].connRightState = gNodeArray[ nodeID ].state;			
 		}
 		
 		// down
-		if ( gNodeArray[ nodeID ].connDown )
+		if ( gNodeArray[ nodeID ].connDown && prevNodeID != nodeID + NODE_NUM_X )
 		{
 			if ( gNodeArray[ nodeID + NODE_NUM_X ].state != gNodeArray[ nodeID ].state )
 			{
-				gNodeArray[ nodeID + NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
-				gNodeArray[ nodeID ].connDownState = gNodeArray[ nodeID ].state;
-				gDirtyNodeArray.push( nodeID + NODE_NUM_X );
+				gDirtyNodeArray.push( { currID:nodeID + NODE_NUM_X, prevID:nodeID } );
 			}
+			gNodeArray[ nodeID + NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
+			gNodeArray[ nodeID ].connDownState = gNodeArray[ nodeID ].state;			
 		}
 		
 		// left
-		if ( nodeID > 0 && gNodeArray[ nodeID - 1 ].connRight )
+		if ( nodeID > 0 && gNodeArray[ nodeID - 1 ].connRight && prevNodeID != nodeID - 1 )
 		{
 			if ( gNodeArray[ nodeID - 1 ].state != gNodeArray[ nodeID ].state )
 			{		
-				gNodeArray[ nodeID - 1 ].state = gNodeArray[ nodeID ].state;
-				gNodeArray[ nodeID - 1 ].connRightState = gNodeArray[ nodeID ].state;
-				gDirtyNodeArray.push( nodeID - 1 )
+				gDirtyNodeArray.push( { currID:nodeID - 1, prevID:nodeID } )
 			}
+			gNodeArray[ nodeID - 1 ].state = gNodeArray[ nodeID ].state;
+			gNodeArray[ nodeID - 1 ].connRightState = gNodeArray[ nodeID ].state;			
 		}
 		
 		// up
-		if ( nodeID > NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown )
+		if ( nodeID > NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown && prevNodeID != nodeID - NODE_NUM_X )
 		{
 			if ( gNodeArray[ nodeID - NODE_NUM_X ].state != gNodeArray[ nodeID ].state )
 			{
-				gNodeArray[ nodeID - NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
-				gNodeArray[ nodeID - NODE_NUM_X ].connDownState = gNodeArray[ nodeID ].state;
-				gDirtyNodeArray.push( nodeID - NODE_NUM_X )			
+				gDirtyNodeArray.push( { currID:nodeID - NODE_NUM_X, prevID:nodeID } )				
 			}
+			gNodeArray[ nodeID - NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
+			gNodeArray[ nodeID - NODE_NUM_X ].connDownState = gNodeArray[ nodeID ].state;			
 		}
 		
 		// gates
@@ -179,14 +181,14 @@ var SimulateSubCycle = function()
 				if ( gNodeArray[ gate.dstNodeA ].state != newState )
 				{
 					gNodeArray[ gate.dstNodeA ].state = newState;
-					gDirtyNodeArray.push( gate.dstNodeA );
+					gDirtyNodeArray.push( { currID:gate.dstNodeA, prevID:-1 } );
 				}
 				
 				if ( gNodeArray[ gate.dstNodeB ].state != newState )
 				{
 					gNodeArray[ gate.dstNodeB ].state = newState;
-					gDirtyNodeArray.push( gate.dstNodeB );
-				}				
+					gDirtyNodeArray.push( { currID:gate.dstNodeB, prevID:-1 } );
+				}
 			}
 		}
 	}
@@ -242,33 +244,16 @@ var DrawGrid = function()
 		{
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled && gNodeArray[ x + y * NODE_NUM_X ].connRight )
 			{
-				if ( gNodeArray[ x + y * NODE_NUM_X ].connRightState == 0 )
-					ctx.strokeStyle = '#FFDD00';
-				else
-					ctx.strokeStyle = '#FF0000';
-
-				//ctx.save();
-				//ctx.shadowColor = '#999';
-				//ctx.shadowBlur = 10;
-				//ctx.shadowOffsetX = 3;
-				//ctx.shadowOffsetY = 3;
+				ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].connRightState ];
 				ctx.beginPath();
 				ctx.moveTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.lineTo( GRID_OFF_X + ( x + 1 ) * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.stroke();
-				//ctx.fill();
-				//ctx.shadowOffsetX = 0;
-				//ctx.shadowOffsetY = 0;	
-				//ctx.restore();
 			}
 			
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled && gNodeArray[ x + y * NODE_NUM_X ].connDown )
 			{
-				if ( gNodeArray[ x + y * NODE_NUM_X ].connDownState == 0 )
-					ctx.strokeStyle = '#FFDD00';
-				else
-					ctx.strokeStyle = '#FF0000';
-			
+				ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].connDownState ];
 				ctx.beginPath();
 				ctx.moveTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.lineTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + ( y + 1 ) * TILE_H );
@@ -292,11 +277,7 @@ var DrawGrid = function()
 		{
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled )
 			{
-				if ( gNodeArray[ x + y * NODE_NUM_X ].state == 0 )
-					ctx.strokeStyle = '#FFDD00';
-				else
-					ctx.strokeStyle = '#FF0000';
-
+				ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].state ];
 				ctx.beginPath();
 				ctx.arc( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H, 4, 0, 2 * Math.PI, false );
 				ctx.fill();
@@ -317,10 +298,20 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 	ctx.beginPath();	
 	for ( var i = 0; i < waveform.length; ++i )
 	{
-		ctx.moveTo( posX + i * width, posY + ( waveform[ i ] ? 0 : height ) );
-		ctx.lineTo( posX + ( i + 1 ) * width, posY + ( waveform[ i ] ? 0 : height ) );
-		
-		if ( i + 1 < waveform.length && waveform[ i ] != waveform[ i + 1 ] )
+		if ( waveform[ i ] == 2 )
+		{
+			ctx.moveTo( posX + i * width, posY );
+			ctx.lineTo( posX + ( i + 1 ) * width, posY + height );
+			ctx.moveTo( posX + i * width, posY + height );
+			ctx.lineTo( posX + ( i + 1 ) * width, posY );
+		}
+		else
+		{
+			ctx.moveTo( posX + i * width, posY + ( waveform[ i ] ? 0 : height ) );
+			ctx.lineTo( posX + ( i + 1 ) * width, posY + ( waveform[ i ] ? 0 : height ) );
+		}
+
+		if ( i + 1 < waveform.length && waveform[ i ] != waveform[ i + 1 ] && waveform[ i ] != 2 && waveform[ i + 1 ] != 2 )
 		{
 			ctx.moveTo( posX + ( i + 1 ) * width, posY );
 			ctx.lineTo( posX + ( i + 1 ) * width, posY + height );
