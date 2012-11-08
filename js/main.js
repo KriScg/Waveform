@@ -55,18 +55,41 @@ var InitLevel = function( levelID )
 		for ( var x = 0; x < NODE_NUM_X; ++x )
 		{
 			var i = x + y * NODE_NUM_X;
+			var enabledNode = level.nodes[ i ] != 0;
+			gNodeArray[ i ] = { enabled:enabledNode, connDownPossible:enabledNode, connRightPossible:enabledNode, connDown:false, connRight:false, connDownState:2, connRightState:2, state:2 };		
+		}
+	}
+	
+	for ( var y = 0; y < NODE_NUM_Y; ++y )
+	{
+		for ( var x = 0; x < NODE_NUM_X; ++x )
+		{
+			var i = x + y * NODE_NUM_X;
 			
-			gNodeArray[ i ] = { enabled:level.nodes[ i ] != 0, connDown:false, connRight:false, connDownState:2, connRightState:2, state:2 };
+			if ( x == NODE_NUM_X - 1 || !gNodeArray[ i + 1 ].enabled )
+			{
+				gNodeArray[ i ].connRightPossible = false;
+			}
+			
+			if ( y == NODE_NUM_Y - 1 || !gNodeArray[ i + NODE_NUM_X ].enabled )
+			{
+				gNodeArray[ i ].connDownPossible = false;
+			}
 
 			if ( level.nodes[ i ] == 2 )
 			{
 				gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:i, srcNodeB:-1, dstNodeA:i+1, dstNodeB:-1, nodeX:x, nodeY:y, rotation:0 } );
+				gNodeArray[ i ].connRightPossible = false;
 			}
-			
+
 			if ( level.nodes[ i ] == 3 )
 			{
 				gGateArray.push( { type:GateTypeEnum.OR, srcNodeA:i, srcNodeB:i+NODE_NUM_X, dstNodeA:i+1, dstNodeB:i+1+NODE_NUM_X, nodeX:x, nodeY:y, rotation:0 } );
-			}			
+				gNodeArray[ i ].connRightPossible = false;
+				gNodeArray[ i ].connDownPossible = false;
+				gNodeArray[ i + NODE_NUM_X ].connRightPossible = false;
+				gNodeArray[ i + 1 ].connDownPossible = false;
+			}	
 		}
 	}
 	
@@ -100,7 +123,6 @@ var SimulateCycle = function()
 	// outputs
 	gSimulator.waveform.push( gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state );
 	gSimulator.cycle += 1;
-	console.log( gDirtyNodeArray.length )	
 }
 
 var SimulateSubCycle = function()
@@ -408,21 +430,14 @@ var SwitchConnector = function( nodeX, nodeY, right )
 	if ( nodeX >= 0 && nodeY >= 0 && nodeX < NODE_NUM_X && nodeY < NODE_NUM_Y )
 	if ( nodeX + 1 < NODE_NUM_X || !right )
 	if ( nodeY + 1 < NODE_NUM_X || right )
-	if ( gNodeArray[ nodeX + nodeY * NODE_NUM_X ].enabled )
 	{
-		if ( right )
+		if ( right && gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRightPossible )
 		{
-			if ( gNodeArray[ nodeX + 1 + nodeY * NODE_NUM_X ].enabled )
-			{
-				gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight;
-			}
+			gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connRight;
 		}
-		else
+		else if ( !right && gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDownPossible )
 		{
-			if ( gNodeArray[ nodeX + ( nodeY + 1 ) * NODE_NUM_X ].enabled )
-			{		
-				gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown;
-			}
+			gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown = !gNodeArray[ nodeX + nodeY * NODE_NUM_X ].connDown;
 		}
 	}
 }
