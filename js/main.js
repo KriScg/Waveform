@@ -60,7 +60,7 @@ var InitLevel = function( levelID )
 
 			if ( level.nodes[ i ] == 2 )
 			{
-				gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:i, srcNodeB:i+NODE_NUM_X, dstNodeA:i+1, dstNodeB:i+1+NODE_NUM_X, nodeX:x, nodeY:y, rotation:0 } );
+				gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:i, srcNodeB:-1, dstNodeA:i+1, dstNodeB:-1, nodeX:x, nodeY:y, rotation:0 } );
 			}
 			
 			if ( level.nodes[ i ] == 3 )
@@ -173,8 +173,8 @@ var SimulateSubCycle = function()
 			if ( gate.srcNodeA == nodeID || gate.srcNodeB == nodeID )
 			{
 				var newState 	= 0;
-				var stateA 		= gNodeArray[ gate.srcNodeA ].state;
-				var stateB 		= gNodeArray[ gate.srcNodeB ].state;
+				var stateA 		= gate.srcNodeA != -1 ? gNodeArray[ gate.srcNodeA ].state : 2;
+				var stateB 		= gate.srcNodeB != -1 ? gNodeArray[ gate.srcNodeB ].state : 2;
 				
 				switch ( gate.type )
 				{
@@ -183,13 +183,13 @@ var SimulateSubCycle = function()
 					case GateTypeEnum.OR: 	newState = stateA == 1 || stateB == 1 ? 1 : 0; break;
 				}
 
-				if ( gNodeArray[ gate.dstNodeA ].state != newState )
+				if ( gate.dstNodeA != -1 && gNodeArray[ gate.dstNodeA ].state != newState )
 				{
 					gNodeArray[ gate.dstNodeA ].state = newState;
 					gDirtyNodeArray.push( { currID:gate.dstNodeA, prevID:-1 } );
 				}
 				
-				if ( gNodeArray[ gate.dstNodeB ].state != newState )
+				if ( gate.dstNodeB != -1 && gNodeArray[ gate.dstNodeB ].state != newState )
 				{
 					gNodeArray[ gate.dstNodeB ].state = newState;
 					gDirtyNodeArray.push( { currID:gate.dstNodeB, prevID:-1 } );

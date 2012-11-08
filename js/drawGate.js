@@ -1,9 +1,16 @@
 var DrawGate = function( type, nodeX, nodeY, rotation )
 {
 	ctx.save();
-	ctx.translate( GRID_OFF_X + ( nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + ( nodeY + 0.5 ) * TILE_H );
+	if ( type == GateTypeEnum.NOT )
+	{
+		ctx.translate( GRID_OFF_X + ( nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + nodeY * TILE_H );
+	}
+	else
+	{
+		ctx.translate( GRID_OFF_X + ( nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + ( nodeY + 0.5 ) * TILE_H );
+	}
 	ctx.rotate( rotation )
-	
+
 	ctx.strokeStyle = 'black';
 	ctx.lineWidth = 2;
 	ctx.beginPath();
@@ -14,8 +21,6 @@ var DrawGate = function( type, nodeX, nodeY, rotation )
 		case GateTypeEnum.AND: 	DrawAND(); 	break;
 		case GateTypeEnum.OR: 	DrawOR(); 	break;
 	}
-	DrawGateInputs();
-	DrawGateOutputs();
 
 	ctx.stroke();
 	ctx.restore();
@@ -50,11 +55,18 @@ var DrawAND = function()
 	ctx.lineTo( -size, -size );
 	ctx.lineTo( -size, size );
 	ctx.lineTo( 1, size );
+
+	DrawGateInputs();
+	DrawGateOutputs();	
 }
 
 var DrawNOT = function()
 {
-	var size = 10;
+	var size = 8;
+	ctx.moveTo( -0.5 * TILE_H, 0 );
+	ctx.lineTo( -size, 0 );
+	ctx.moveTo( size, 0 );
+	ctx.lineTo( +0.5 * TILE_H, 0 );
 	ctx.moveTo( size, 0 );
 	ctx.lineTo( 1 - size, -size - 1 );
 	ctx.lineTo( 1 - size, size + 1 );
@@ -71,4 +83,7 @@ var DrawOR = function()
 	ctx.lineTo( 1, size );
 	ctx.quadraticCurveTo( 0.75 * size, 0.75 * size, size, 0 )
 	ctx.quadraticCurveTo( 0.75 * size, -0.75 * size, 1, -size )
+	
+	DrawGateInputs();
+	DrawGateOutputs();	
 }
