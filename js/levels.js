@@ -110,5 +110,5 @@ var gLevels = new Array
 				waveform:new Array( 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 )
 			}
 		),
-	}	
+	}
 );

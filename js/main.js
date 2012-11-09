@@ -6,6 +6,7 @@ var WIDTH 			= 600,
 	NODE_NUM_Y 		= 10,
 	GRID_OFF_X		= 140,
 	GRID_OFF_Y		= 10,
+	SUBCYCLE_NUM	= 20,
 	gLoop,
 	c 				= document.getElementById('c'), 
 	ctx 			= c.getContext('2d');			
@@ -19,7 +20,8 @@ var gInputsArray 	= new Array();
 var gOutput;
 var gSimulator		= { cycle:0, subCycle:0, waveform:new Array() };
 var gCurrLevelID	= 0;
-var gStateToColor 	= new Array( "#FFDD00", "#FF0000", "#FF00FF" );
+//var gStateToColor 	= new Array( "#FFDD00", "#FF0000", "#FF00FF" );
+var gStateToColor 	= new Array( "#0000FF", "#FF0000", "#FF00FF" );
 
 gButtonArray.push( { posX:300, posY:385, width:30, height:30, text:"verify" } );
 gButtonArray.push( { posX:330, posY:385, width:30, height:30, text:"step" } );
@@ -38,6 +40,7 @@ var SimulateReset = function()
 		gNodeArray[ i ].connDownState 	= 2;
 		gNodeArray[ i ].connRightState 	= 2;
 		gNodeArray[ i ].state			= 2;
+		gNodeArray[ i ].constState		= -1;
 	}
 }
 
@@ -56,7 +59,7 @@ var InitLevel = function( levelID )
 		{
 			var i = x + y * NODE_NUM_X;
 			var enabledNode = level.nodes[ i ] != 0;
-			gNodeArray[ i ] = { enabled:enabledNode, connDownPossible:enabledNode, connRightPossible:enabledNode, connDown:false, connRight:false, connDownState:2, connRightState:2, state:2 };		
+			gNodeArray[ i ] = { enabled:enabledNode, connDownPossible:enabledNode, connRightPossible:enabledNode, connDown:false, connRight:false, connDownState:2, connRightState:2, state:2, constState:-1 };		
 		}
 	}
 	
@@ -101,7 +104,7 @@ InitLevel( 0 );
 var Simulate = function()
 {
 	SimulateReset();
-	for ( var i = 0; i < 20; ++i )
+	for ( var i = 0; i < gOutput.waveform.length; ++i )
 	{
 		SimulateCycle();
 	}
@@ -114,7 +117,7 @@ var SimulateCycle = function()
 		return;
 	}
 
-	for ( var i = 0; i < 20; ++i )
+	for ( var i = 0; i < SUBCYCLE_NUM; ++i )
 	{
 		gSimulator.subCycle = i;
 		SimulateSubCycle()
@@ -123,21 +126,50 @@ var SimulateCycle = function()
 	// outputs
 	gSimulator.waveform.push( gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state );
 	gSimulator.cycle += 1;
+	console.log( gDirtyNodeArray.length )
+}
+
+var WriteState = function( srcNodeID, dstNodeID )
+{
+	if ( gNodeArray[ dstNodeID ].state != gNodeArray[ srcNodeID ].state )
+	{
+		gDirtyNodeArray.push( { currID:dstNodeID, prevID:srcNodeID } );
+		gNodeArray[ dstNodeID ].state = gNodeArray[ srcNodeID ].state;
+	}
 }
 
 var SimulateSubCycle = function()
 {
-	// inputs
-	var arrLen = gInputsArray.length;
-	for ( var i = 0; i < arrLen; ++i )
+	// inject inputs
+	if ( gSimulator.subCycle == 0 )
 	{
-		var input = gInputsArray[ i ];
-		var nodeID = input.nodeX + input.nodeY * NODE_NUM_X;
-		gNodeArray[ nodeID ].state = input.waveform[ gSimulator.cycle ];
-		gDirtyNodeArray.push( { currID:nodeID, prevID:-1 } );
+		var arrLen = gInputsArray.length;
+		for ( var i = 0; i < arrLen; ++i )
+		{
+			var input = gInputsArray[ i ];
+			var inputNodeID = input.nodeX + input.nodeY * NODE_NUM_X;
+			if ( gSimulator.subCycle == 0 )
+			{
+				gNodeArray[ inputNodeID ].state 		= input.waveform[ gSimulator.cycle ];
+				gNodeArray[ inputNodeID ].constState 	= input.waveform[ gSimulator.cycle ];
+				gDirtyNodeArray.push( { currID:inputNodeID, prevID:-1 } );
+			}
+		}
 	}
 
+	// check constState violations	
 	var dirtyNodeArrLen = gDirtyNodeArray.length;
+	for ( var i = 0; i < dirtyNodeArrLen; ++i )
+	{
+		var nodeID 		= gDirtyNodeArray[ i ].currID;		
+		if ( gNodeArray[ nodeID ].constState >= 0 && gNodeArray[ nodeID ].state != gNodeArray[ nodeID ].constState )
+		{
+			gNodeArray[ nodeID ].state 	= 2;
+			gDirtyNodeArray[ i ].prevID	= -1;
+		}
+	}
+
+	// nodes
 	for ( var i = 0; i < dirtyNodeArrLen; ++i )
 	{
 		var nodeID 		= gDirtyNodeArray[ i ].currID;
@@ -146,47 +178,31 @@ var SimulateSubCycle = function()
 		// right
 		if ( gNodeArray[ nodeID ].connRight && prevNodeID != nodeID + 1 )
 		{
-			if ( gNodeArray[ nodeID + 1 ].state != gNodeArray[ nodeID ].state )
-			{
-				gDirtyNodeArray.push( { currID:nodeID + 1, prevID:nodeID } );
-			}
-			gNodeArray[ nodeID + 1 ].state = gNodeArray[ nodeID ].state;			
-			gNodeArray[ nodeID ].connRightState = gNodeArray[ nodeID ].state;			
+			WriteState( nodeID, nodeID + 1 );
+			gNodeArray[ nodeID ].connRightState = gNodeArray[ nodeID ].state;
 		}
 		
 		// down
 		if ( gNodeArray[ nodeID ].connDown && prevNodeID != nodeID + NODE_NUM_X )
 		{
-			if ( gNodeArray[ nodeID + NODE_NUM_X ].state != gNodeArray[ nodeID ].state )
-			{
-				gDirtyNodeArray.push( { currID:nodeID + NODE_NUM_X, prevID:nodeID } );
-			}
-			gNodeArray[ nodeID + NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
-			gNodeArray[ nodeID ].connDownState = gNodeArray[ nodeID ].state;			
+			WriteState( nodeID, nodeID + NODE_NUM_X );
+			gNodeArray[ nodeID ].connDownState = gNodeArray[ nodeID ].state;
 		}
-		
+
 		// left
 		if ( nodeID > 0 && gNodeArray[ nodeID - 1 ].connRight && prevNodeID != nodeID - 1 )
 		{
-			if ( gNodeArray[ nodeID - 1 ].state != gNodeArray[ nodeID ].state )
-			{		
-				gDirtyNodeArray.push( { currID:nodeID - 1, prevID:nodeID } )
-			}
-			gNodeArray[ nodeID - 1 ].state = gNodeArray[ nodeID ].state;
+			WriteState( nodeID, nodeID - 1 );
 			gNodeArray[ nodeID - 1 ].connRightState = gNodeArray[ nodeID ].state;			
 		}
-		
+
 		// up
 		if ( nodeID > NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown && prevNodeID != nodeID - NODE_NUM_X )
 		{
-			if ( gNodeArray[ nodeID - NODE_NUM_X ].state != gNodeArray[ nodeID ].state )
-			{
-				gDirtyNodeArray.push( { currID:nodeID - NODE_NUM_X, prevID:nodeID } )				
-			}
-			gNodeArray[ nodeID - NODE_NUM_X ].state = gNodeArray[ nodeID ].state;
+			WriteState( nodeID, nodeID - NODE_NUM_X );
 			gNodeArray[ nodeID - NODE_NUM_X ].connDownState = gNodeArray[ nodeID ].state;			
 		}
-		
+
 		// gates
 		var gateArrLen = gGateArray.length;
 		for ( var j = 0; j < gateArrLen; ++j )
@@ -204,21 +220,29 @@ var SimulateSubCycle = function()
 					case GateTypeEnum.AND: 	newState = stateA == 1 && stateB == 1 ? 1 : 0; break;
 					case GateTypeEnum.OR: 	newState = stateA == 1 || stateB == 1 ? 1 : 0; break;
 				}
+				
+				if ( stateA == 2 || ( stateB == 2 && gate.type != GateTypeEnum.NOT ) )
+				{
+					newState = 2;
+				}
 
 				if ( gate.dstNodeA != -1 && gNodeArray[ gate.dstNodeA ].state != newState )
 				{
-					gNodeArray[ gate.dstNodeA ].state = newState;
+					gNodeArray[ gate.dstNodeA ].state 		= newState;
+					gNodeArray[ gate.dstNodeA ].constState 	= newState;
 					gDirtyNodeArray.push( { currID:gate.dstNodeA, prevID:-1 } );
 				}
 				
 				if ( gate.dstNodeB != -1 && gNodeArray[ gate.dstNodeB ].state != newState )
 				{
-					gNodeArray[ gate.dstNodeB ].state = newState;
+					gNodeArray[ gate.dstNodeB ].state 		= newState;
+					gNodeArray[ gate.dstNodeA ].constState 	= newState;
 					gDirtyNodeArray.push( { currID:gate.dstNodeB, prevID:-1 } );
 				}
 			}
 		}
 	}
+	
 	gDirtyNodeArray = gDirtyNodeArray.slice( dirtyNodeArrLen );
 	gSimulator.currSubcycle += 1;
 }
