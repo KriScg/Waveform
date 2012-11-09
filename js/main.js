@@ -23,6 +23,13 @@ var gCurrLevelID	= 0;
 //var gStateToColor 	= new Array( "#FFDD00", "#FF0000", "#FF00FF" );
 var gStateToColor 	= new Array( "#0000FF", "#FF0000", "#FF00FF" );
 
+var GameStateEnum =
+{
+	DESIGN		: 0,
+	DEBUG 		: 1
+}
+var gGameState		= GameStateEnum.DESIGN;
+
 gButtonArray.push( { posX:300, posY:385, width:30, height:30, text:"verify" } );
 gButtonArray.push( { posX:330, posY:385, width:30, height:30, text:"step" } );
 gButtonArray.push( { posX:360, posY:385, width:30, height:30, text:"stop" } );
@@ -30,6 +37,7 @@ gButtonArray.push( { posX:360, posY:385, width:30, height:30, text:"stop" } );
 var SimulateReset = function()
 {
 	gSimulator.cycle 			= 0;
+	gSimulator.score			= 0;
 	gSimulator.subCycle 		= 0;
 	gSimulator.waveform.length 	= 0;
 	gDirtyNodeArray.length		= 0;
@@ -112,11 +120,6 @@ var Simulate = function()
 
 var SimulateCycle = function()
 {
-	if ( gSimulator.cycle >= gOutput.waveform.length )
-	{
-		return;
-	}
-
 	for ( var i = 0; i < SUBCYCLE_NUM; ++i )
 	{
 		gSimulator.subCycle = i;
@@ -126,6 +129,17 @@ var SimulateCycle = function()
 	// outputs
 	gSimulator.waveform.push( gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state );
 	gSimulator.cycle += 1;
+	
+	var correctEntryNum = 0;
+	for ( var i = 0; i < gSimulator.waveform.length; ++i )
+	{
+		if ( gSimulator.waveform[ i ] == gOutput.waveform[ i ] )
+		{
+			++correctEntryNum;
+		}
+	}
+	gSimulator.score = Math.round( ( correctEntryNum * 100 ) / gSimulator.waveform.length );
+	
 	console.log( gDirtyNodeArray.length )
 }
 
@@ -297,7 +311,10 @@ var DrawGrid = function()
 		{
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled && gNodeArray[ x + y * NODE_NUM_X ].connRight )
 			{
-				ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].connRightState ];
+				if ( gGameState == GameStateEnum.DEBUG )
+				{
+					ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].connRightState ];
+				}
 				ctx.beginPath();
 				ctx.moveTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.lineTo( GRID_OFF_X + ( x + 1 ) * TILE_W, GRID_OFF_Y + y * TILE_H );
@@ -306,7 +323,10 @@ var DrawGrid = function()
 			
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled && gNodeArray[ x + y * NODE_NUM_X ].connDown )
 			{
-				ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].connDownState ];
+				if ( gGameState == GameStateEnum.DEBUG )
+				{			
+					ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].connDownState ];
+				}
 				ctx.beginPath();
 				ctx.moveTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H );
 				ctx.lineTo( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + ( y + 1 ) * TILE_H );
@@ -322,6 +342,7 @@ var DrawGrid = function()
 		DrawGate( gGateArray[ i ].type, gGateArray[ i ].nodeX, gGateArray[ i ].nodeY, gGateArray[ i ].rotation )
 	}
 
+	ctx.strokeStyle = '#FFDD00';
 	ctx.fillStyle 	= 'green';
 	ctx.lineWidth 	= 2;
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
@@ -330,7 +351,10 @@ var DrawGrid = function()
 		{
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled )
 			{
-				ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].state ];
+				if ( gGameState == GameStateEnum.DEBUG )
+				{			
+					ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].state ];
+				}
 				ctx.beginPath();
 				ctx.arc( GRID_OFF_X + x * TILE_W, GRID_OFF_Y + y * TILE_H, 4, 0, 2 * Math.PI, false );
 				ctx.fill();
@@ -345,7 +369,7 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 	ctx.fillText( text, posX - 30, posY + height * 0.5 );
 	ctx.fillText( "1", posX - 5, posY );
 	ctx.fillText( "0", posX - 5, posY + height );
-	ctx.strokeStyle = overlay ? '#888888' : '#000000';
+	ctx.strokeStyle = overlay ? "#777777" : "#0030A0";
 	ctx.lineWidth = 2;
 	ctx.beginPath();	
 	for ( var i = 0; i < waveform.length; ++i )
@@ -390,7 +414,7 @@ var DrawTestBench = function()
 	ctx.fillStyle = 'black';
 	ctx.font = '10px Arial';
 	ctx.textAlign = 'left';
-	ctx.fillText( "WAVEFORMS Cycle: " + gSimulator.cycle.toString() + "/20", posX, posY - 20 );
+	ctx.fillText( "Cycle: " + gSimulator.cycle.toString() + "/20" + " Corectness: " + gSimulator.score + "%", posX, posY - 20 );
 	ctx.textAlign = 'center';	
 	
 	ctx.strokeStyle = 'gray';
@@ -430,7 +454,18 @@ var DrawHUD = function()
 		ctx.closePath();
 		ctx.stroke();	
 		ctx.fillText( button.text, button.posX + button.width * 0.5, button.posY + button.height * 0.5 );
-	}	
+	}
+
+	ctx.strokeStyle = 'black';
+	ctx.textAlign = 'center';
+	if ( gGameState == GameStateEnum.DESIGN )
+	{
+		ctx.fillText( "Designing...", WIDTH * 0.5, 20 );
+	} 
+	else if ( gGameState == GameStateEnum.DEBUG )
+	{
+		ctx.fillText( "Debugging...", WIDTH * 0.5, 20 );
+	}
 };
 
 var DrawDesc = function()
@@ -538,9 +573,23 @@ document.onmouseup = function( e )
 			{
 				switch ( i )
 				{
-					case 0: Simulate(); break;
-					case 1: SimulateCycle(); break;
-					case 2: SimulateReset(); break;
+					case 0:
+						//gGameState = GameStateEnum.VERIFY;
+						Simulate(); 
+						break;
+
+					case 1:
+						if ( gSimulator.cycle < gOutput.waveform.length )
+						{
+							gGameState = GameStateEnum.DEBUG;
+							SimulateCycle();
+						}
+						break;
+						
+					case 2: 
+						gGameState = GameStateEnum.DESIGN;					
+						SimulateReset();
+						break;
 				}
 			}
 		}
