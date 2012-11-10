@@ -1,0 +1,16 @@
+@font-face {
+    font-family: 'Orbitron';
+    src: url('../font/orbitron-bold-webfont.ttf') format('truetype');
+}
+
+html {
+    background-color: #FFFFFF;
+}
+
+#c {
+    display: block;
+    margin: 0 auto;
+    border-color: #000000;
+    border-style: solid;
+    border-width: 1px;
+}
