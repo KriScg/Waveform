@@ -101,7 +101,16 @@ var InitLevel = function( levelID )
 				gNodeArray[ i ].connDownPossible = false;
 				gNodeArray[ i + NODE_NUM_X ].connRightPossible = false;
 				gNodeArray[ i + 1 ].connDownPossible = false;
-			}	
+			}
+			
+			if ( level.nodes[ i ] == 4 )
+			{
+				gGateArray.push( { type:GateTypeEnum.AND, srcNodeA:i, srcNodeB:i+NODE_NUM_X, dstNodeA:i+1, dstNodeB:i+1+NODE_NUM_X, nodeX:x, nodeY:y, rotation:0 } );
+				gNodeArray[ i ].connRightPossible = false;
+				gNodeArray[ i ].connDownPossible = false;
+				gNodeArray[ i + NODE_NUM_X ].connRightPossible = false;
+				gNodeArray[ i + 1 ].connDownPossible = false;
+			}			
 		}
 	}
 	
@@ -140,8 +149,6 @@ var SimulateCycle = function()
 		}
 	}
 	gSimulator.score = Math.round( ( correctEntryNum * 100 ) / gSimulator.waveform.length );
-	
-	console.log( gDirtyNodeArray.length )
 }
 
 var EvaluateGateState = function( gate )
@@ -186,7 +193,7 @@ var WriteState2 = function( newState, dstNodeID )
 {
 	if ( dstNodeID != -1 && gNodeArray[ dstNodeID ].state != newState )
 	{
-		if ( gSimulator.subCycle < SUBCYCLE_STABLE_NUM )
+		if ( gSimulator.subCycle >= SUBCYCLE_STABLE_NUM )
 		{
 			newState = 2;
 		}
@@ -536,6 +543,7 @@ document.onkeydown = function( e )
 		case 97: InitLevel( 0 ); break;
 		case 98: InitLevel( 1 ); break;
 		case 99: InitLevel( 2 ); break;
+		case 100: InitLevel( 3 ); break;
 	}
 }
 
