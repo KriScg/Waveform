@@ -505,15 +505,21 @@ var OnEdgeMouseUp = function( nodeX, nodeY, right )
 	if ( nodeY + 1 < NODE_NUM_Y || right )
 	if ( ( right && gNodeArray[ nodeID + 1 ].enabled ) || ( !right && gNodeArray[ nodeID + NODE_NUM_X ].enabled ) )
 	{
-		var gateID = -1;
-		var gateArrLen = gGateArray.length;
-		for ( var j = 0; j < gateArrLen; ++j )
+		var newGateType	= GateTypeEnum.NOT;
+		var oldGateType	= null;
+		for ( var j = 0; j < gGateArray.length; ++j )
 		{
 			var gate = gGateArray[ j ];
-			if ( gate.nodeX == nodeX && gate.nodeY == nodeY && gate.type == GateTypeEnum.NOT )
+			if ( right && ( ( gate.nodeX == nodeX && gate.nodeY == nodeY ) || ( gate.nodeX == nodeX && gate.nodeY == nodeY - 1 && gate.type != GateTypeEnum.NOT ) ) )
 			{
-				gateID = j;
-				break;
+				gGateArray.splice( j, 1 );
+				--j;
+				oldGateType = gate.type == GateTypeEnum.NOT ? gate.type : oldGateType;
+			}
+			else if ( !right && gate.type != GateTypeEnum.NOT && ( ( gate.nodeX == nodeX && gate.nodeY == nodeY ) || ( gate.nodeX == nodeX - 1 && gate.nodeY == nodeY ) ) )
+			{
+				gGateArray.splice( j, 1 );
+				--j;				
 			}
 		}
 
@@ -521,10 +527,6 @@ var OnEdgeMouseUp = function( nodeX, nodeY, right )
 		{
 			if ( right )
 			{
-				if ( gateID >= 0 )
-				{
-					gGateArray.splice( gateID, 1 );
-				}			
 				gNodeArray[ nodeID ].connRight = !gNodeArray[ nodeID ].connRight;
 			}
 			else if ( !right )
@@ -532,17 +534,10 @@ var OnEdgeMouseUp = function( nodeX, nodeY, right )
 				gNodeArray[ nodeID ].connDown = !gNodeArray[ nodeID ].connDown;
 			}
 		}
-		else if ( gToolboxState == 1 && right )
+		else if ( gToolboxState == 1 && right && oldGateType != GateTypeEnum.NOT )
 		{
-			if ( gateID >= 0 )
-			{
-				gGateArray.splice( gateID, 1 );
-			}
-			else
-			{
-				gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:nodeID, srcNodeB:-1, dstNodeA:nodeID+1, dstNodeB:-1, nodeX:nodeX, nodeY:nodeY, rotation:0 } );
-				gNodeArray[ nodeID ].connRight = false;
-			}
+			gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:nodeID, srcNodeB:-1, dstNodeA:nodeID+1, dstNodeB:-1, nodeX:nodeX, nodeY:nodeY, rotation:0 } );
+			gNodeArray[ nodeID ].connRight = false;
 		}
 	}
 }
@@ -555,27 +550,20 @@ var OnTileMouseUp = function( tileX, tileY )
 		if ( tileX >= 0 && tileY >= 0 && tileX + 1 < NODE_NUM_X && tileY + 1 < NODE_NUM_Y )
 		if ( gNodeArray[ tileID ].enabled && gNodeArray[ tileID + 1 ].enabled && gNodeArray[ tileID + NODE_NUM_X ].enabled && gNodeArray[ tileID + NODE_NUM_X + 1 ].enabled )
 		{
-			var gateID 		= -1;
 			var newGateType	= gToolboxState == 2 ? GateTypeEnum.OR : GateTypeEnum.AND;
-			var gateType	= newGateType;
-			var gateArrLen 	= gGateArray.length;
-			for ( var j = 0; j < gateArrLen; ++j )
+			var oldGateType	= null;
+			for ( var j = 0; j < gGateArray.length; ++j )
 			{
 				var gate = gGateArray[ j ];
-				if ( gate.nodeX == tileX && gate.nodeY == tileY && gate.type != GateTypeEnum.NOT )
+				if ( ( gate.nodeX == tileX && gate.nodeY == tileY ) || ( gate.nodeX == tileX && gate.nodeY == tileY + 1 && gate.type == GateTypeEnum.NOT ) )
 				{
-					gateID 		= j;
-					gateType 	= gate.type;
-					break;
+					gGateArray.splice( j, 1 );
+					--j;
+					oldGateType = gate.type != GateTypeEnum.NOT ? gate.type : oldGateType;
 				}
 			}
 
-			if ( gateID >= 0 )
-			{
-				gGateArray.splice( gateID, 1 );
-			}
-
-			if ( gateID < 0 || gateType != newGateType )
+			if ( oldGateType != newGateType )
 			{
 				gGateArray.push( { type:newGateType, srcNodeA:tileID, srcNodeB:tileID+NODE_NUM_X, dstNodeA:tileID+1, dstNodeB:tileID+1+NODE_NUM_X, nodeX:tileX, nodeY:tileY, rotation:0 } );
 				gNodeArray[ tileID ].connDown = false;
