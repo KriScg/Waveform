@@ -11,6 +11,7 @@ var gLevels = new Array
 	{ 
 		name:".01 Routing",
 		desc:"Route clock from input to output.",
+		toolboxStateMax:0,
 		nodes:new Array
 		(
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -44,8 +45,9 @@ var gLevels = new Array
 	
 	// level 2
 	{
-		name:".02 Inverted (NOT)",
+		name:".02 Inverted",
 		desc:"Invert clock input and route it to output.",
+		toolboxStateMax:1,
 		nodes:new Array
 		(
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -79,8 +81,9 @@ var gLevels = new Array
 	
 	// level 3
 	{
-		name:".03 Continuous (NOT,OR)",
+		name:".03 Continuous",
 		desc:"temp desc",
+		toolboxStateMax:2,
 		nodes:new Array
 		(
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -114,8 +117,9 @@ var gLevels = new Array
 	
 	// level 4
 	{
-		name:".04 Maybe (AND,NOT,NOT)",
+		name:".04 Maximum",
 		desc:"temp desc",
+		toolboxStateMax:2,
 		nodes:new Array
 		(
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -134,7 +138,7 @@ var gLevels = new Array
 			name:"Output", 
 			nodeX:6, 
 			nodeY:4,
-			waveform:new Array( 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1 )
+			waveform:new Array( 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 )
 		},
 		inputs:new Array
 		(
@@ -155,8 +159,9 @@ var gLevels = new Array
 	
 	// level 5
 	{
-		name:".05 Selector (NOT,AND,AND,OR)",
+		name:".05 Selector",
 		desc:"temp desc",
+		toolboxStateMax:3,
 		nodes:new Array
 		(
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

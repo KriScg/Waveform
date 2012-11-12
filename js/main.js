@@ -28,17 +28,18 @@ var GameStateEnum =
 	DESIGN		: 0,
 	DEBUG 		: 1
 }
-var gGameState		= GameStateEnum.DESIGN;
-var gToolboxState	= 0;
+var gGameState			= GameStateEnum.DESIGN;
+var gToolboxState		= 0;
+var gToolboxStateMax	= 0;
 
-gButtonArray.push( { posX:300, posY:385, width:30, height:30, text:"verify", focus:false } );
-gButtonArray.push( { posX:330, posY:385, width:30, height:30, text:"step", focus:false } );
-gButtonArray.push( { posX:360, posY:385, width:30, height:30, text:"stop", focus:false } );
+gButtonArray.push( { posX:300, posY:385, width:30, height:30, text:"verify", focus:false, enabled:true } );
+gButtonArray.push( { posX:330, posY:385, width:30, height:30, text:"step", focus:false, enabled:true } );
+gButtonArray.push( { posX:360, posY:385, width:30, height:30, text:"stop", focus:false, enabled:true } );
 
-gButtonArray.push( { posX:550, posY:20, width:30, height:30, text:"Node", focus:true } );
-gButtonArray.push( { posX:550, posY:51, width:30, height:30, text:"NOT", focus:false } );
-gButtonArray.push( { posX:550, posY:82, width:30, height:30, text:"OR", focus:false } );
-gButtonArray.push( { posX:550, posY:113, width:30, height:30, text:"AND", focus:false } );
+gButtonArray.push( { posX:530, posY:20, width:50, height:50, text:"1 Node", focus:true, enabled:true } );
+gButtonArray.push( { posX:530, posY:71, width:50, height:50, text:"2 NOT", focus:false, enabled:true } );
+gButtonArray.push( { posX:530, posY:122, width:50, height:50, text:"3 OR", focus:false, enabled:true } );
+gButtonArray.push( { posX:530, posY:173, width:50, height:50, text:"4 AND", focus:false, enabled:true } );
 
 var SimulateReset = function()
 {
@@ -58,6 +59,18 @@ var SimulateReset = function()
 	}
 }
 
+var SelectTool = function( toolID )
+{
+	toolID = Math.min( toolID, gToolboxStateMax );
+
+	gButtonArray[ 3 ].focus = false;
+	gButtonArray[ 4 ].focus = false;
+	gButtonArray[ 5 ].focus = false;
+	gButtonArray[ 6 ].focus = false;
+	gButtonArray[ toolID + 3 ].focus = true;
+	gToolboxState = toolID;
+}
+
 var InitLevel = function( levelID )
 {
 	gCurrLevelID = levelID;
@@ -67,6 +80,12 @@ var InitLevel = function( levelID )
 	gOutput 			= level.output;
 	gInputsArray 		= level.inputs;
 	gGateArray.length 	= 0;
+	gToolboxStateMax	= level.toolboxStateMax;
+	
+	gButtonArray[ 3 ].enabled = true;
+	gButtonArray[ 4 ].enabled = gToolboxStateMax >= 1;
+	gButtonArray[ 5 ].enabled = gToolboxStateMax >= 2;
+	gButtonArray[ 6 ].enabled = gToolboxStateMax >= 3;
 
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
@@ -79,6 +98,7 @@ var InitLevel = function( levelID )
 	}
 
 	SimulateReset();
+	SelectTool( 0 );
 }
 
 InitLevel( 0 );
@@ -438,22 +458,24 @@ var DrawTestBench = function()
 };
 
 var DrawHUD = function()
-{	
+{
 	// buttons
 	var buttonArrLen = gButtonArray.length;
 	for ( var i = 0; i < buttonArrLen; ++i )
 	{
 		var button = gButtonArray[ i ];
-
-		ctx.strokeStyle = button.focus ? 'red' : 'black';
-		ctx.fillStyle = 'black';
-		ctx.textAlign = 'center';
-		ctx.lineWidth = 2;
-		ctx.beginPath();
-		ctx.rect( button.posX, button.posY, button.width, button.height );
-		ctx.closePath();
-		ctx.stroke();	
-		ctx.fillText( button.text, button.posX + button.width * 0.5, button.posY + button.height * 0.5 );
+		if ( button.enabled )
+		{
+			ctx.strokeStyle = button.focus ? 'red' : 'black';
+			ctx.fillStyle = 'black';
+			ctx.textAlign = 'center';
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.rect( button.posX, button.posY, button.width, button.height );
+			ctx.closePath();
+			ctx.stroke();	
+			ctx.fillText( button.text, button.posX + button.width * 0.5, button.posY + button.height * 0.5 );
+		}
 	}
 
 	ctx.font		= '10px Arial';
@@ -472,7 +494,7 @@ var DrawHUD = function()
 var DrawDesc = function()
 {
 	ctx.strokeStyle = 'black';
-	ctx.fillStyle = '#F2FACF';
+	ctx.fillStyle = "#F2FACF";
 	ctx.beginPath();
 	ctx.arc( 550, 440, 150, 0, 2 * Math.PI, false );
 	ctx.fill();
@@ -485,17 +507,7 @@ var DrawDesc = function()
 	ctx.fillText( gLevels[ gCurrLevelID ].desc, 530, 420 );
 };
 
-var SelectTool = function( toolID )
-{
-	gButtonArray[ 3 ].focus = false;
-	gButtonArray[ 4 ].focus = false;
-	gButtonArray[ 5 ].focus = false;
-	gButtonArray[ 6 ].focus = false;
-	gButtonArray[ toolID + 3 ].focus = true;
-	gToolboxState = toolID;
-}
-
-var OnEdgeMouseUp = function( nodeX, nodeY, right )
+var OnEdgeMouseDown = function( nodeX, nodeY, right )
 {
 	var nodeID = nodeX + nodeY * NODE_NUM_X;
 
@@ -542,7 +554,7 @@ var OnEdgeMouseUp = function( nodeX, nodeY, right )
 	}
 }
 
-var OnTileMouseUp = function( tileX, tileY )
+var OnTileMouseDown = function( tileX, tileY )
 {
 	var tileID = tileX + tileY * NODE_NUM_X;
 	if ( gToolboxState == 2 || gToolboxState == 3 )
@@ -592,7 +604,7 @@ document.onkeydown = function( e )
 	}
 }
 
-document.onmouseup = function( e )
+document.onmousedown = function( e )
 {
 	var mousePosX = e.pageX - c.offsetLeft;
 	var mousePosY = e.pageY - c.offsetTop;
@@ -605,26 +617,26 @@ document.onmouseup = function( e )
 		var tileSubPosX = posX - tileX;
 		var tileSubPosY = posY - tileY;
 		//console.log( "mousePos:", mousePosX, mousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );		
-				
+
 		// gates
-		OnTileMouseUp( tileX, tileY );
+		OnTileMouseDown( tileX, tileY );
 	
 		// connectors
 		if ( tileSubPosX > tileSubPosY && tileSubPosX < 1 - tileSubPosY )
 		{
-			OnEdgeMouseUp( tileX, tileY, true );
+			OnEdgeMouseDown( tileX, tileY, true );
 		}
 		else if ( tileSubPosX < tileSubPosY && tileSubPosX > 1 - tileSubPosY )
 		{
-			OnEdgeMouseUp( tileX, tileY + 1, true );
+			OnEdgeMouseDown( tileX, tileY + 1, true );
 		}
 		else if ( tileSubPosX < tileSubPosY && tileSubPosX < 1 - tileSubPosY )
 		{
-			OnEdgeMouseUp( tileX, tileY, false );	
+			OnEdgeMouseDown( tileX, tileY, false );	
 		}
 		else
 		{
-			OnEdgeMouseUp( tileX + 1, tileY, false );
+			OnEdgeMouseDown( tileX + 1, tileY, false );
 		}
 		
 		// buttons
