@@ -4,8 +4,8 @@ var WIDTH 				= 600,
 	TILE_H 				= 36,
 	NODE_NUM_X 			= 10,
 	NODE_NUM_Y 			= 10,
-	GRID_OFF_X			= 140,
-	GRID_OFF_Y			= 10,
+	GRID_OFF_X			= TILE_W * 4,
+	GRID_OFF_Y			= TILE_H,
 	SUBCYCLE_NUM		= 40,
 	SUBCYCLE_STABLE_NUM	= 20,
 	c 				= document.getElementById('c'), 
@@ -19,36 +19,35 @@ var gInputsArray 	= new Array();
 var gOutput;
 var gSimulator		= { cycle:0, subCycle:0, score:0, waveform:new Array() };
 var gCurrLevelID	= 0;
-var gStateToColor 	= new Array( "#0000FF", "#FF0000", "#FF00FF" );
+var gStateToColor 	= new Array( '#0000FF', '#FF0000', '#FF00FF' );
 
 var GameStateEnum =
 {
 	DESIGN		: 0,
 	DEBUG 		: 1,
 	VERIFY 		: 2,
-	DESIGN		: 3,
-	END_LEVEL	: 4,
-	MAIN_MENU	: 5
+	END_LEVEL	: 3,
+	MAIN_MENU	: 4
 }
-var gGameStateDesc		= new Array( "Designing", "Debugging", "Verifying", "Completed", "Menu" )
+var gGameStateDesc		= new Array( 'Designing', 'Debugging', 'Verifying', 'Completed', 'Menu' )
 var gGameState			= GameStateEnum.DEBUG;
 var gToolboxState		= 0;
 var gToolboxStateMax	= 0;
 
 var gHUDButtons	= new Array();
-gHUDButtons.push( { posX:300, posY:385, width:30, height:30, text:"verify", focus:false, enabled:true } );
-gHUDButtons.push( { posX:330, posY:385, width:30, height:30, text:"step", focus:false, enabled:true } );
-gHUDButtons.push( { posX:360, posY:385, width:30, height:30, text:"stop", focus:false, enabled:true } );
+gHUDButtons.push( { posX:300, posY:385, width:30, height:30, text:'verify', background:'#C5CE9A', focus:false, enabled:true } );
+gHUDButtons.push( { posX:330, posY:385, width:30, height:30, text:'step', background:'#C5CE9A',focus:false, enabled:true } );
+gHUDButtons.push( { posX:360, posY:385, width:30, height:30, text:'stop', background:'#C5CE9A',focus:false, enabled:true } );
 
 var gToolButtons = new Array();
-gToolButtons.push( { posX:530, posY:20, width:50, height:50, text:"1 Node", focus:true, enabled:true } );
-gToolButtons.push( { posX:530, posY:71, width:50, height:50, text:"2 NOT", focus:false, enabled:true } );
-gToolButtons.push( { posX:530, posY:122, width:50, height:50, text:"3 OR", focus:false, enabled:true } );
-gToolButtons.push( { posX:530, posY:173, width:50, height:50, text:"4 AND", focus:false, enabled:true } );
+gToolButtons.push( { posX:530, posY:20, width:50, height:50, text:'1 Node', background:'#C5CE9A', focus:true, enabled:true } );
+gToolButtons.push( { posX:530, posY:71, width:50, height:50, text:'2 NOT', background:'#C5CE9A', focus:false, enabled:true } );
+gToolButtons.push( { posX:530, posY:122, width:50, height:50, text:'3 OR', background:'#C5CE9A', focus:false, enabled:true } );
+gToolButtons.push( { posX:530, posY:173, width:50, height:50, text:'4 AND', background:'#C5CE9A', focus:false, enabled:true } );
 
 var gEndLevelButtons = new Array();
-gEndLevelButtons.push( { posX:200, posY:300, width:80, height:40, text:"Restart level", focus:false, enabled:true } );
-gEndLevelButtons.push( { posX:300, posY:300, width:80, height:40, text:"Next level", focus:false, enabled:true } );
+gEndLevelButtons.push( { posX:200, posY:300, width:80, height:40, text:'Restart level', background:'#C5CE9A', focus:false, enabled:true } );
+gEndLevelButtons.push( { posX:300, posY:300, width:80, height:40, text:'Next level', background:'#C5CE9A', focus:false, enabled:true } );
 
 var gMainMenuButtons = new Array();
 for ( var i = 0; i < gLevels.length; ++i )
@@ -58,7 +57,7 @@ for ( var i = 0; i < gLevels.length; ++i )
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
-	gMainMenuButtons.push( { posX:150 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, focus:false, enabled:true } );
+	gMainMenuButtons.push( { posX:150 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, background:'#C5CE9A', focus:false, enabled:true } );
 }
 
 var SimulateReset = function()
@@ -124,12 +123,26 @@ var InitLevel = function( levelID )
 
 InitLevel( 0 );
 
-var Simulate = function()
+var gVerifyLoop;
+var Verify = function()
 {
-	SimulateReset();
-	for ( var i = 0; i < gOutput.waveform.length; ++i )
+	if ( gGameState == GameStateEnum.VERIFY )
 	{
-		SimulateCycle();
+		if ( gSimulator.cycle < gOutput.waveform.length )
+		{
+			SimulateCycle();
+			gVerifyLoop = setTimeout( Verify, 250 );
+		}
+		else
+		{
+			gGameState = GameStateEnum.DESIGN;
+			if ( gSimulator.score == 100 )
+			{
+				gGameState = GameStateEnum.END_LEVEL;
+			}
+		}
+		
+		DrawGame();
 	}
 }
 
@@ -305,6 +318,7 @@ var Clear = function()
 
 var DrawGrid = function()
 {
+	// solid background
 	ctx.strokeStyle = 'black';
 	ctx.fillStyle = '#8ECCBC';	
 	ctx.beginPath();
@@ -312,38 +326,58 @@ var DrawGrid = function()
 	ctx.closePath();
 	ctx.fill();
 	ctx.stroke();
+	
+	// background lines
+	ctx.lineWidth 	= 1;
+	ctx.strokeStyle = '87C1B1';
+	ctx.beginPath();
+	for ( var i = 0; i < 21; ++i )
+	{
+		ctx.moveTo( 0.5, 0.5 + TILE_H * i * 0.5 );
+		ctx.lineTo( WIDTH + 0.5, 0.5 + TILE_H * i * 0.5 );
+	}
+	for ( var i = 0; i < 34; ++i )
+	{
+		ctx.moveTo( 0.5 + i * TILE_W * 0.5, 0.5 );
+		ctx.lineTo( 0.5 + i * TILE_W * 0.5, HEIGHT + 0.5 );
+	}
+	ctx.closePath();
+	ctx.stroke();
 
 	// inputs and outputs
-	ctx.strokeStyle = '#FFDD00';
-	ctx.fillStyle = 'black';
-	ctx.font = '10px Arial';
-	ctx.textAlign = 'right';
-	ctx.lineWidth = 2;
-	
+	ctx.strokeStyle		= '#FFDD00';
+	ctx.fillStyle		= 'black';
+	ctx.font			= '10px Arial';
+	ctx.textAlign 		= 'right';
+	ctx.textBaseline	= 'bottom';
+	ctx.lineWidth		= 2;
+
 	var arrLen = gInputsArray.length;
 	for ( var i = 0; i < arrLen; ++i )
 	{
 		var input = gInputsArray[ i ];
-		ctx.fillText( input.name, GRID_OFF_X - 10 + input.nodeX * TILE_W, GRID_OFF_Y - 6 + input.nodeY * TILE_H );
-		if ( gGameState == GameStateEnum.DEBUG )
+		ctx.fillText( input.name, GRID_OFF_X - 10 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H - 3 );
+		if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
 		{
 			ctx.strokeStyle = gStateToColor[ gNodeArray[ input.nodeX + input.nodeY * NODE_NUM_X ].state ];
 		}
 		ctx.beginPath();
 		ctx.moveTo( GRID_OFF_X - 30 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		ctx.lineTo( GRID_OFF_X + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
-		ctx.stroke();	
+		ctx.closePath();
+		ctx.stroke();
 	}
 	
 	ctx.textAlign = 'left';
-	ctx.fillText( gOutput.name, GRID_OFF_X + 10 + gOutput.nodeX * TILE_W, GRID_OFF_Y - 6 + gOutput.nodeY * TILE_H );
-	if ( gGameState == GameStateEnum.DEBUG )
+	ctx.fillText( gOutput.name, GRID_OFF_X + 10 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H - 3 );
+	if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
 	{
 		ctx.strokeStyle = gStateToColor[ gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state ];
 	}		
 	ctx.beginPath();
 	ctx.moveTo( GRID_OFF_X + 30 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.closePath();
 	ctx.stroke();	
 	
 
@@ -356,7 +390,7 @@ var DrawGrid = function()
 		{
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled && gNodeArray[ x + y * NODE_NUM_X ].connRight )
 			{
-				if ( gGameState == GameStateEnum.DEBUG )
+				if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
 				{
 					ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].connRightState ];
 				}
@@ -368,7 +402,7 @@ var DrawGrid = function()
 			
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled && gNodeArray[ x + y * NODE_NUM_X ].connDown )
 			{
-				if ( gGameState == GameStateEnum.DEBUG )
+				if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
 				{			
 					ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].connDownState ];
 				}
@@ -396,7 +430,7 @@ var DrawGrid = function()
 		{
 			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled )
 			{
-				if ( gGameState == GameStateEnum.DEBUG )
+				if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
 				{			
 					ctx.strokeStyle = gStateToColor[ gNodeArray[ x + y * NODE_NUM_X ].state ];
 				}
@@ -411,9 +445,9 @@ var DrawGrid = function()
 
 var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay )
 {
-	ctx.textAlign = "right";
+	ctx.textAlign = 'right';
 	ctx.fillText( text, posX - 5, posY + height * 0.5 + 4 );
-	ctx.strokeStyle = overlay ? "#777777" : "#0030A0";
+	ctx.strokeStyle = overlay ? '#777777' : '#0030A0';
 	ctx.lineWidth = 2;
 	ctx.beginPath();	
 	for ( var i = 0; i < waveform.length; ++i )
@@ -447,7 +481,7 @@ var DrawTestBench = function()
 	var width 	= 16;
 	var height 	= 16;
 	
-	ctx.strokeStyle = "black";
+	ctx.strokeStyle = 'black';
 	ctx.fillStyle = '#F2FADF';	
 	ctx.beginPath();
 	ctx.rect( 0, 370, 600, 600 - 370 );
@@ -457,8 +491,8 @@ var DrawTestBench = function()
 	
 	ctx.fillStyle = 'black';
 	ctx.font = '10px Arial';
-	ctx.textAlign = "left";
-	ctx.fillText( "Cycle: " + gSimulator.cycle.toString() + "/20" + " Corectness: " + gSimulator.score + "%", posX, posY - 20 );
+	ctx.textAlign = 'left';
+	ctx.fillText( 'Cycle: ' + gSimulator.cycle.toString() + '/20' + ' Corectness: ' + gSimulator.score + '%', posX, posY - 20 );
 	ctx.textAlign = 'center';	
 	
 	ctx.strokeStyle = 'gray';
@@ -482,8 +516,8 @@ var DrawTestBench = function()
 		posY += height * 2.5;
 	}
 
-	DrawWaveform( posX, posY, width, height, "Output", gOutput.waveform, true );
-	DrawWaveform( posX, posY, width, height, "Output", gSimulator.waveform );
+	DrawWaveform( posX, posY, width, height, 'Output', gOutput.waveform, true );
+	DrawWaveform( posX, posY, width, height, 'Output', gSimulator.waveform );
 };
 
 var DrawToolbox = function()
@@ -506,23 +540,25 @@ var DrawHUD = function()
 	ctx.font		= '10px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';	
-	ctx.fillText( gLevels[ gCurrLevelID ].name + " - " + gGameStateDesc[ gGameState ] + "... Tool:" + gToolboxState, 10, 20 );
+	ctx.fillText( gLevels[ gCurrLevelID ].name + ' - ' + gGameStateDesc[ gGameState ] + '... Tool:' + gToolboxState, 10, 20 );
 }
 
 var DrawDesc = function()
 {
-	ctx.strokeStyle = 'black';
-	ctx.fillStyle = "#F2FACF";
+	ctx.lineWidth	= 2;
+	ctx.strokeStyle	= 'black';
+	ctx.fillStyle 	= '#F2FACF';
 	ctx.beginPath();
-	ctx.arc( 550, 440, 150, 0, 2 * Math.PI, false );
+	//ctx.arc( 550, 440, 150, 0, 2 * Math.PI, false );
+	ctx.rect( 400, 380, 180, 200 );
 	ctx.fill();
 	ctx.stroke();
 	
 	ctx.font 		= '10px Arial';
 	ctx.fillStyle 	= 'black';
-	ctx.textAlign 	= 'center';	
-	ctx.fillText( gLevels[ gCurrLevelID ].name, 530, 400 );
-	ctx.fillText( gLevels[ gCurrLevelID ].desc, 530, 420 );
+	ctx.textAlign 	= 'center';
+	ctx.fillText( gLevels[ gCurrLevelID ].name, 490, 400 );
+	ctx.fillText( gLevels[ gCurrLevelID ].desc, 490, 420 );
 }
 
 var DrawEndLevelWindow = function()
@@ -531,17 +567,18 @@ var DrawEndLevelWindow = function()
 	var windowH = 200;
 
 	ctx.strokeStyle = 'black';
-	ctx.fillStyle = "#F2FACF";
+	ctx.fillStyle = '#F2FACF';
 	ctx.beginPath();
 	ctx.rect( ( WIDTH - windowW ) * 0.5, ( HEIGHT - windowH ) * 0.5, windowW, windowH );
 	ctx.fill();
 	ctx.stroke();
 	
-	ctx.font 		= '10px Arial';
-	ctx.fillStyle 	= 'black';
-	ctx.textAlign 	= 'center';	
+	ctx.font			= '10px Arial';
+	ctx.fillStyle		= 'black';
+	ctx.textAlign		= 'center';	
+	ctx.textBaseline	= 'middle';
 	ctx.fillText( gLevels[ gCurrLevelID ].name, WIDTH * 0.5, HEIGHT * 0.5 - 60 );
-	ctx.fillText( "Design completed!", WIDTH * 0.5, HEIGHT * 0.5 - 30 );
+	ctx.fillText( 'Design completed!', WIDTH * 0.5, HEIGHT * 0.5 - 30 );
 	
 	var len = gEndLevelButtons.length;
 	for ( var i = 0; i < len; ++i )
@@ -553,18 +590,18 @@ var DrawEndLevelWindow = function()
 var DrawMainMenu = function()
 {
 	ctx.strokeStyle = 'black';
-	ctx.fillStyle = "#F2FACF";
+	ctx.fillStyle = '#F2FACF';
 	ctx.beginPath();
 	ctx.rect( 0, 0, WIDTH, HEIGHT );
 	ctx.fill();
 	ctx.stroke();
 	
-	ctx.font			= "10px Arial";
-	ctx.fillStyle 		= "black";
-	ctx.textAlign 		= "center";	
-	ctx.textBaseline 	= "middle";
-	ctx.fillText( "WAVEFORM", WIDTH * 0.5, 100 );
-	ctx.fillText( "Select level", WIDTH * 0.5, 130 );
+	ctx.font			= '10px Arial';
+	ctx.fillStyle 		= 'black';
+	ctx.textAlign 		= 'center';	
+	ctx.textBaseline 	= 'middle';
+	ctx.fillText( 'WAVEFORM', WIDTH * 0.5, 100 );
+	ctx.fillText( 'Select level', WIDTH * 0.5, 130 );
 	
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )
@@ -667,6 +704,7 @@ document.onkeydown = function( e )
 		case 99: InitLevel( 2 ); break;
 		case 100: InitLevel( 3 ); break;
 		case 101: InitLevel( 4 ); break;
+		case 102: InitLevel( 5 ); break;
 	}
 	
 	DrawGame();
@@ -684,9 +722,9 @@ document.onmousedown = function( e )
 		var tileY 		= Math.floor( posY );
 		var tileSubPosX = posX - tileX;
 		var tileSubPosY = posY - tileY;
-		//console.log( "mousePos:", mousePosX, mousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );		
+		//console.log( 'mousePos:', mousePosX, mousePosY, 'tile:', tileX, tileY, 'tileSubPos:', tileSubPosX, tileSubPosY );		
 
-		if ( gGameState == GameStateEnum.DESIGN || gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
+		if ( gGameState == GameStateEnum.DESIGN || gGameState == GameStateEnum.DEBUG )
 		{
 			// gates
 			OnTileMouseDown( tileX, tileY );
@@ -708,7 +746,19 @@ document.onmousedown = function( e )
 			{
 				OnEdgeMouseDown( tileX + 1, tileY, false );
 			}
-			
+					
+			var len = gToolButtons.length;
+			for ( var i = 0; i < len; ++i )
+			{
+				if ( ButtonMouseDown( gToolButtons[ i ], mousePosX, mousePosY ) )
+				{
+					SelectTool( i );
+				}
+			}
+		}
+		
+		if ( gGameState == GameStateEnum.DESIGN || gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
+		{
 			// hud buttons
 			var len = gHUDButtons.length;
 			for ( var i = 0; i < len; ++i )
@@ -718,12 +768,9 @@ document.onmousedown = function( e )
 					switch ( i )
 					{
 						case 0:
-							gGameState = GameStateEnum.VERIFY;
-							Simulate(); 
-							if ( gSimulator.score == 100 )
-							{
-								gGameState = GameStateEnum.END_LEVEL;
-							}
+							gGameState = GameStateEnum.VERIFY;						
+							SimulateReset();
+							Verify();
 							break;
 
 						case 1:
@@ -739,15 +786,6 @@ document.onmousedown = function( e )
 							SimulateReset();
 							break;
 					}
-				}
-			}
-		
-			var len = gToolButtons.length;
-			for ( var i = 0; i < len; ++i )
-			{
-				if ( ButtonMouseDown( gToolButtons[ i ], mousePosX, mousePosY ) )
-				{
-					SelectTool( i );
 				}
 			}
 		}
