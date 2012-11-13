@@ -26,10 +26,12 @@ var GameStateEnum =
 	DESIGN		: 0,
 	DEBUG 		: 1,
 	VERIFY 		: 2,
-	END_LEVEL	: 3
+	DESIGN		: 3,
+	END_LEVEL	: 4,
+	MAIN_MENU	: 5
 }
-var gGameStateDesc		= new Array( "Designing", "Debugging", "Verifying", "Completed" )
-var gGameState			= GameStateEnum.DESIGN;
+var gGameStateDesc		= new Array( "Designing", "Debugging", "Verifying", "Completed", "Menu" )
+var gGameState			= GameStateEnum.DEBUG;
 var gToolboxState		= 0;
 var gToolboxStateMax	= 0;
 
@@ -47,6 +49,17 @@ gToolButtons.push( { posX:530, posY:173, width:50, height:50, text:"4 AND", focu
 var gEndLevelButtons = new Array();
 gEndLevelButtons.push( { posX:200, posY:300, width:80, height:40, text:"Restart level", focus:false, enabled:true } );
 gEndLevelButtons.push( { posX:300, posY:300, width:80, height:40, text:"Next level", focus:false, enabled:true } );
+
+var gMainMenuButtons = new Array();
+for ( var i = 0; i < gLevels.length; ++i )
+{ 
+	var btnW 	= 80;
+	var btnH 	= 50;
+	var offset	= 10;
+	var offsetX = btnW + offset;
+	var offsetY = btnH + offset;
+	gMainMenuButtons.push( { posX:150 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, focus:false, enabled:true } );
+}
 
 var SimulateReset = function()
 {
@@ -508,7 +521,6 @@ var DrawEndLevelWindow = function()
 {
 	var windowW = 300;
 	var windowH = 200;
-	var windowCenterX	= 
 
 	ctx.strokeStyle = 'black';
 	ctx.fillStyle = "#F2FACF";
@@ -528,6 +540,29 @@ var DrawEndLevelWindow = function()
 	{
 		DrawButton( gEndLevelButtons[ i ] );
 	}
+}
+
+var DrawMainMenu = function()
+{
+	ctx.strokeStyle = 'black';
+	ctx.fillStyle = "#F2FACF";
+	ctx.beginPath();
+	ctx.rect( 0, 0, WIDTH, HEIGHT );
+	ctx.fill();
+	ctx.stroke();
+	
+	ctx.font			= "10px Arial";
+	ctx.fillStyle 		= "black";
+	ctx.textAlign 		= "center";	
+	ctx.textBaseline 	= "middle";
+	ctx.fillText( "WAVEFORM", WIDTH * 0.5, 100 );
+	ctx.fillText( "Select level", WIDTH * 0.5, 130 );
+	
+	var len = gMainMenuButtons.length;
+	for ( var i = 0; i < len; ++i )
+	{
+		DrawButton( gMainMenuButtons[ i ] );
+	}	
 }
 
 var OnEdgeMouseDown = function( nodeX, nodeY, right )
@@ -643,83 +678,102 @@ document.onmousedown = function( e )
 		var tileSubPosY = posY - tileY;
 		//console.log( "mousePos:", mousePosX, mousePosY, "tile:", tileX, tileY, "tileSubPos:", tileSubPosX, tileSubPosY );		
 
-		// gates
-		OnTileMouseDown( tileX, tileY );
-	
-		// connectors
-		if ( tileSubPosX > tileSubPosY && tileSubPosX < 1 - tileSubPosY )
+		if ( gGameState == GameStateEnum.DESIGN || gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
 		{
-			OnEdgeMouseDown( tileX, tileY, true );
-		}
-		else if ( tileSubPosX < tileSubPosY && tileSubPosX > 1 - tileSubPosY )
-		{
-			OnEdgeMouseDown( tileX, tileY + 1, true );
-		}
-		else if ( tileSubPosX < tileSubPosY && tileSubPosX < 1 - tileSubPosY )
-		{
-			OnEdgeMouseDown( tileX, tileY, false );	
-		}
-		else
-		{
-			OnEdgeMouseDown( tileX + 1, tileY, false );
-		}
+			// gates
+			OnTileMouseDown( tileX, tileY );
 		
-		// hud buttons
-		var len = gHUDButtons.length;
-		for ( var i = 0; i < len; ++i )
-		{
-			if ( ButtonMouseDown( gHUDButtons[ i ], mousePosX, mousePosY ) )
+			// connectors
+			if ( tileSubPosX > tileSubPosY && tileSubPosX < 1 - tileSubPosY )
 			{
-				switch ( i )
+				OnEdgeMouseDown( tileX, tileY, true );
+			}
+			else if ( tileSubPosX < tileSubPosY && tileSubPosX > 1 - tileSubPosY )
+			{
+				OnEdgeMouseDown( tileX, tileY + 1, true );
+			}
+			else if ( tileSubPosX < tileSubPosY && tileSubPosX < 1 - tileSubPosY )
+			{
+				OnEdgeMouseDown( tileX, tileY, false );	
+			}
+			else
+			{
+				OnEdgeMouseDown( tileX + 1, tileY, false );
+			}
+			
+			// hud buttons
+			var len = gHUDButtons.length;
+			for ( var i = 0; i < len; ++i )
+			{
+				if ( ButtonMouseDown( gHUDButtons[ i ], mousePosX, mousePosY ) )
 				{
-					case 0:
-						gGameState = GameStateEnum.VERIFY;
-						Simulate(); 
-						if ( gSimulator.score == 100 )
-						{
-							gGameState = GameStateEnum.END_LEVEL;
-						}
-						break;
+					switch ( i )
+					{
+						case 0:
+							gGameState = GameStateEnum.VERIFY;
+							Simulate(); 
+							if ( gSimulator.score == 100 )
+							{
+								gGameState = GameStateEnum.END_LEVEL;
+							}
+							break;
 
-					case 1:
-						if ( gSimulator.cycle < gOutput.waveform.length )
-						{
-							gGameState = GameStateEnum.DEBUG;
-							SimulateCycle();
-						}
-						break;
-						
-					case 2: 
-						gGameState = GameStateEnum.DESIGN;					
-						SimulateReset();
-						break;
+						case 1:
+							if ( gSimulator.cycle < gOutput.waveform.length )
+							{
+								gGameState = GameStateEnum.DEBUG;
+								SimulateCycle();
+							}
+							break;
+							
+						case 2: 
+							gGameState = GameStateEnum.DESIGN;					
+							SimulateReset();
+							break;
+					}
+				}
+			}
+		
+			var len = gToolButtons.length;
+			for ( var i = 0; i < len; ++i )
+			{
+				if ( ButtonMouseDown( gToolButtons[ i ], mousePosX, mousePosY ) )
+				{
+					SelectTool( i );
 				}
 			}
 		}
-		
-		var len = gToolButtons.length;
-		for ( var i = 0; i < len; ++i )
-		{
-			if ( ButtonMouseDown( gToolButtons[ i ], mousePosX, mousePosY ) )
-			{
-				SelectTool( i );
-			}
-		}		
 
-		var len = gEndLevelButtons.length;
-		for ( var i = 0; i < len; ++i )
+		if ( gGameState == GameStateEnum.END_LEVEL )
 		{
-			if ( ButtonMouseDown( gEndLevelButtons[ i ], mousePosX, mousePosY ) )
+			var len = gEndLevelButtons.length;
+			for ( var i = 0; i < len; ++i )
 			{
-				switch ( i )
+				if ( ButtonMouseDown( gEndLevelButtons[ i ], mousePosX, mousePosY ) )
 				{
-					case 0:
-						InitLevel( gCurrLevelID );
-						break;
+					switch ( i )
+					{
+						case 0:
+							InitLevel( gCurrLevelID );
+							break;
 
-					case 1:
-						InitLevel( gCurrLevelID + 1 );
-						break;
+						case 1:
+							InitLevel( gCurrLevelID + 1 );
+							break;
+					}
+				}
+			}
+		}
+
+		if ( gGameState == GameStateEnum.MAIN_MENU )
+		{		
+			var len = gMainMenuButtons.length;
+			for ( var i = 0; i < len; ++i )
+			{
+				if ( ButtonMouseDown( gMainMenuButtons[ i ], mousePosX, mousePosY ) )
+				{
+					InitLevel( i );
+					gGameState = gGameState.DESIGN;
 				}
 			}
 		}
@@ -731,16 +785,24 @@ document.onmousedown = function( e )
 var DrawGame = function()
 {
 	Clear();
-	DrawGrid();	
-	DrawTestBench();
-	DrawToolbox();
-	DrawHUD();
-	DrawDesc();
+
+	if ( gGameState == GameStateEnum.MAIN_MENU )
+	{
+		DrawMainMenu();
+	}
+	else
+	{
+		DrawGrid();	
+		DrawTestBench();
+		DrawToolbox();
+		DrawHUD();
+		DrawDesc();		
+	}
 
 	if ( gGameState == GameStateEnum.END_LEVEL )
 	{
 		DrawEndLevelWindow();
-	}
+	}	
 }
 
 DrawGame();
