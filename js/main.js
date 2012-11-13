@@ -325,16 +325,24 @@ var DrawGrid = function()
 	{
 		var input = gInputsArray[ i ];
 		ctx.fillText( input.name, GRID_OFF_X - 10 + input.nodeX * TILE_W, GRID_OFF_Y - 6 + input.nodeY * TILE_H );
+		if ( gGameState == GameStateEnum.DEBUG )
+		{
+			ctx.strokeStyle = gStateToColor[ gNodeArray[ input.nodeX + input.nodeY * NODE_NUM_X ].state ];
+		}
 		ctx.beginPath();
-		ctx.moveTo( GRID_OFF_X - 20 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
+		ctx.moveTo( GRID_OFF_X - 30 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		ctx.lineTo( GRID_OFF_X + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		ctx.stroke();	
 	}
 	
 	ctx.textAlign = 'left';
 	ctx.fillText( gOutput.name, GRID_OFF_X + 10 + gOutput.nodeX * TILE_W, GRID_OFF_Y - 6 + gOutput.nodeY * TILE_H );
+	if ( gGameState == GameStateEnum.DEBUG )
+	{
+		ctx.strokeStyle = gStateToColor[ gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state ];
+	}		
 	ctx.beginPath();
-	ctx.moveTo( GRID_OFF_X + 20 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.moveTo( GRID_OFF_X + 30 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 	ctx.stroke();	
 	
@@ -758,7 +766,14 @@ document.onmousedown = function( e )
 							break;
 
 						case 1:
-							InitLevel( gCurrLevelID + 1 );
+							if ( gCurrLevelID + 1 < gLevels.length )
+							{
+								InitLevel( gCurrLevelID + 1 );
+							}
+							else
+							{
+								gGameState = GameStateEnum.MAIN_MENU;
+							}
 							break;
 					}
 				}
