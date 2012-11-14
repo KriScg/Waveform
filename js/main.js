@@ -35,15 +35,16 @@ var gToolboxState		= 0;
 var gToolboxStateMax	= 0;
 
 var gHUDButtons	= new Array();
-gHUDButtons.push( { posX:300, posY:385, width:30, height:30, text:'verify', background:'#C5CE9A', focus:false, enabled:true } );
-gHUDButtons.push( { posX:330, posY:385, width:30, height:30, text:'step', background:'#C5CE9A',focus:false, enabled:true } );
-gHUDButtons.push( { posX:360, posY:385, width:30, height:30, text:'stop', background:'#C5CE9A',focus:false, enabled:true } );
+gHUDButtons.push( { posX:280, posY:360, width:50, height:50, text:'VERIFY', background:'#C5CE9A', focus:false, enabled:true } );
+gHUDButtons.push( { posX:330, posY:360, width:50, height:50, text:'STEP', background:'#C5CE9A',focus:false, enabled:true } );
+gHUDButtons.push( { posX:380, posY:360, width:50, height:50, text:'STOP', background:'#C5CE9A',focus:false, enabled:true } );
 
 var gToolButtons = new Array();
 gToolButtons.push( { posX:530, posY:20, width:50, height:50, text:'1 Node', background:'#C5CE9A', focus:true, enabled:true } );
 gToolButtons.push( { posX:530, posY:71, width:50, height:50, text:'2 NOT', background:'#C5CE9A', focus:false, enabled:true } );
 gToolButtons.push( { posX:530, posY:122, width:50, height:50, text:'3 OR', background:'#C5CE9A', focus:false, enabled:true } );
 gToolButtons.push( { posX:530, posY:173, width:50, height:50, text:'4 AND', background:'#C5CE9A', focus:false, enabled:true } );
+gToolButtons.push( { posX:530, posY:224, width:50, height:50, text:'5 CROSS', background:'#C5CE9A', focus:false, enabled:true } );
 
 var gEndLevelButtons = new Array();
 gEndLevelButtons.push( { posX:200, posY:300, width:80, height:40, text:'Restart level', background:'#C5CE9A', focus:false, enabled:true } );
@@ -169,25 +170,28 @@ var SimulateCycle = function()
 	gSimulator.score = Math.round( ( correctEntryNum * 100 ) / gSimulator.waveform.length );
 }
 
-var EvaluateGateState = function( gate )
+var EvaluateGateStates = function( gate )
 {
-	var newState 	= 0;
+	var newStateA 	= 0;
+	var newStateB 	= 0;
 	var stateA 		= gate.srcNodeA != -1 ? gNodeArray[ gate.srcNodeA ].state : 2;
 	var stateB 		= gate.srcNodeB != -1 ? gNodeArray[ gate.srcNodeB ].state : 2;
 
 	switch ( gate.type )
 	{
-		case GateTypeEnum.NOT: 	newState = stateA == 1 ? 0 : 1;	break;
-		case GateTypeEnum.AND: 	newState = stateA == 1 && stateB == 1 ? 1 : 0; break;
-		case GateTypeEnum.OR: 	newState = stateA == 1 || stateB == 1 ? 1 : 0; break;
+		case GateTypeEnum.NOT: 		newStateA = newStateB = stateA == 1 ? 0 : 1; break;
+		case GateTypeEnum.AND: 		newStateA = newStateB = stateA == 1 && stateB == 1 ? 1 : 0; break;
+		case GateTypeEnum.OR: 		newStateA = newStateB = stateA == 1 || stateB == 1 ? 1 : 0; break;
+		case GateTypeEnum.CROSS: 	newStateA = stateB; newStateB = stateA; break;
 	}
 
 	if ( stateA == 2 || ( stateB == 2 && gate.type != GateTypeEnum.NOT ) )
 	{
-		newState = 2;
+		newStateA = 2;
+		newStateB = 2;
 	}	
-	
-	return newState;
+
+	return [ newStateA, newStateB ];
 }
 
 var WriteState = function( srcNodeID, dstNodeID )
@@ -246,9 +250,9 @@ var SimulateSubCycle = function()
 		for ( var j = 0; j < gateArrLen; ++j )
 		{
 			var gate = gGateArray[ j ];
-			var newState = EvaluateGateState( gate );
-			WriteState2( newState, gate.dstNodeA );
-			WriteState2( newState, gate.dstNodeB );
+			var newStates = EvaluateGateStates( gate );
+			WriteState2( newStates[ 0 ], gate.dstNodeA );
+			WriteState2( newStates[ 1 ], gate.dstNodeB );
 		}
 	}
 
@@ -300,9 +304,9 @@ var SimulateSubCycle = function()
 			var gate = gGateArray[ j ];
 			if ( gate.srcNodeA == nodeID || gate.srcNodeB == nodeID )
 			{
-				var newState = EvaluateGateState( gate );
-				WriteState2( newState, gate.dstNodeA );
-				WriteState2( newState, gate.dstNodeB );
+				var newStates = EvaluateGateStates( gate );
+				WriteState2( newStates[ 0 ], gate.dstNodeA );
+				WriteState2( newStates[ 1 ], gate.dstNodeB );
 			}
 		}
 	}
@@ -329,7 +333,7 @@ var DrawGrid = function()
 	
 	// background lines
 	ctx.lineWidth 	= 1;
-	ctx.strokeStyle = '87C1B1';
+	ctx.strokeStyle = '#87C1B1';
 	ctx.beginPath();
 	for ( var i = 0; i < 21; ++i )
 	{
@@ -343,6 +347,27 @@ var DrawGrid = function()
 	}
 	ctx.closePath();
 	ctx.stroke();
+	
+	// 
+	/*
+	ctx.lineWidth	= 2;
+	ctx.strokeStyle	= 'black';
+	ctx.fillStyle 	= '#8ECCBC';
+	ctx.beginPath();
+	var x = 233;
+	var y = 127;
+	var width = 110;
+	var height = 105;
+	var radius = TILE_W * 0.5;
+	ctx.moveTo(x+radius,y);
+    ctx.arcTo(x+width,y,x+width,y+radius,radius);
+	ctx.arcTo(x+width,y+height,x+width-radius,y+height,radius); 
+	ctx.arcTo(x,y+height,x,y+height-radius,radius);
+	ctx.arcTo(x,y,x+radius,y,radius);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();	
+	*/
 
 	// inputs and outputs
 	ctx.strokeStyle		= '#FFDD00';
@@ -362,7 +387,7 @@ var DrawGrid = function()
 			ctx.strokeStyle = gStateToColor[ gNodeArray[ input.nodeX + input.nodeY * NODE_NUM_X ].state ];
 		}
 		ctx.beginPath();
-		ctx.moveTo( GRID_OFF_X - 30 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
+		ctx.moveTo( GRID_OFF_X - 40 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		ctx.lineTo( GRID_OFF_X + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		ctx.closePath();
 		ctx.stroke();
@@ -375,7 +400,7 @@ var DrawGrid = function()
 		ctx.strokeStyle = gStateToColor[ gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state ];
 	}		
 	ctx.beginPath();
-	ctx.moveTo( GRID_OFF_X + 30 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.moveTo( GRID_OFF_X + 40 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 	ctx.closePath();
 	ctx.stroke();	
@@ -544,21 +569,35 @@ var DrawHUD = function()
 }
 
 var DrawDesc = function()
-{
-	ctx.lineWidth	= 2;
-	ctx.strokeStyle	= 'black';
-	ctx.fillStyle 	= '#F2FACF';
-	ctx.beginPath();
-	//ctx.arc( 550, 440, 150, 0, 2 * Math.PI, false );
-	ctx.rect( 400, 380, 180, 200 );
-	ctx.fill();
-	ctx.stroke();
-	
+{	
 	ctx.font 		= '10px Arial';
 	ctx.fillStyle 	= 'black';
-	ctx.textAlign 	= 'center';
-	ctx.fillText( gLevels[ gCurrLevelID ].name, 490, 400 );
-	ctx.fillText( gLevels[ gCurrLevelID ].desc, 490, 420 );
+	ctx.textAlign 	= 'left';
+	
+	var x = 420;
+	var y = 460;
+	var maxWidth = 160;
+	var lineHeight = 20;	
+	var words = gLevels[ gCurrLevelID ].desc.split(' ');
+	var line = '';
+
+	for ( var n = 0; n < words.length; ++n ) 
+	{
+		var testLine = line + words[ n ] + ' ';
+		var metrics = ctx.measureText( testLine );
+		var testWidth = metrics.width;
+		if ( testWidth > maxWidth ) 
+		{
+			ctx.fillText( line, x, y );
+			line = words[ n ] + ' ';
+			y += lineHeight;
+		}
+		else 
+		{
+			line = testLine;
+		}
+	}
+	ctx.fillText( line, x, y );
 }
 
 var DrawEndLevelWindow = function()
@@ -660,12 +699,12 @@ var OnEdgeMouseDown = function( nodeX, nodeY, right )
 var OnTileMouseDown = function( tileX, tileY )
 {
 	var tileID = tileX + tileY * NODE_NUM_X;
-	if ( gToolboxState == 2 || gToolboxState == 3 )
+	if ( gToolboxState >= 2 && gToolboxState <= 4 )
 	{
 		if ( tileX >= 0 && tileY >= 0 && tileX + 1 < NODE_NUM_X && tileY + 1 < NODE_NUM_Y )
 		if ( gNodeArray[ tileID ].enabled && gNodeArray[ tileID + 1 ].enabled && gNodeArray[ tileID + NODE_NUM_X ].enabled && gNodeArray[ tileID + NODE_NUM_X + 1 ].enabled )
 		{
-			var newGateType	= gToolboxState == 2 ? GateTypeEnum.OR : GateTypeEnum.AND;
+			var newGateType	= GateTypeEnum.AND + gToolboxState - 2;
 			var oldGateType	= null;
 			for ( var j = 0; j < gGateArray.length; ++j )
 			{
@@ -690,6 +729,11 @@ var OnTileMouseDown = function( tileX, tileY )
 	}
 }
 
+var OnButtonMouseDown = function( button, mousePosX, mousePosY )
+{
+	return mousePosX >= button.posX && mousePosX <= button.posX + button.width && mousePosY >= button.posY && mousePosY <= button.posY + button.height;
+}
+
 document.onkeydown = function( e )
 {
 	// tempshit debug stuff
@@ -699,6 +743,7 @@ document.onkeydown = function( e )
 		case 50: SelectTool( 1 ); break;
 		case 51: SelectTool( 2 ); break;
 		case 52: SelectTool( 3 ); break;
+		case 53: SelectTool( 4 ); break;
 		case 97: InitLevel( 0 ); break;
 		case 98: InitLevel( 1 ); break;
 		case 99: InitLevel( 2 ); break;
@@ -750,7 +795,7 @@ document.onmousedown = function( e )
 			var len = gToolButtons.length;
 			for ( var i = 0; i < len; ++i )
 			{
-				if ( ButtonMouseDown( gToolButtons[ i ], mousePosX, mousePosY ) )
+				if ( OnButtonMouseDown( gToolButtons[ i ], mousePosX, mousePosY ) )
 				{
 					SelectTool( i );
 				}
@@ -763,14 +808,17 @@ document.onmousedown = function( e )
 			var len = gHUDButtons.length;
 			for ( var i = 0; i < len; ++i )
 			{
-				if ( ButtonMouseDown( gHUDButtons[ i ], mousePosX, mousePosY ) )
+				if ( OnButtonMouseDown( gHUDButtons[ i ], mousePosX, mousePosY ) )
 				{
 					switch ( i )
 					{
 						case 0:
-							gGameState = GameStateEnum.VERIFY;						
-							SimulateReset();
-							Verify();
+							if ( gGameState != GameStateEnum.VERIFY )
+							{
+								gGameState = GameStateEnum.VERIFY;						
+								SimulateReset();
+								Verify();
+							}
 							break;
 
 						case 1:
@@ -795,7 +843,7 @@ document.onmousedown = function( e )
 			var len = gEndLevelButtons.length;
 			for ( var i = 0; i < len; ++i )
 			{
-				if ( ButtonMouseDown( gEndLevelButtons[ i ], mousePosX, mousePosY ) )
+				if ( OnButtonMouseDown( gEndLevelButtons[ i ], mousePosX, mousePosY ) )
 				{
 					switch ( i )
 					{
@@ -823,7 +871,7 @@ document.onmousedown = function( e )
 			var len = gMainMenuButtons.length;
 			for ( var i = 0; i < len; ++i )
 			{
-				if ( ButtonMouseDown( gMainMenuButtons[ i ], mousePosX, mousePosY ) )
+				if ( OnButtonMouseDown( gMainMenuButtons[ i ], mousePosX, mousePosY ) )
 				{
 					InitLevel( i );
 					gGameState = gGameState.DESIGN;
