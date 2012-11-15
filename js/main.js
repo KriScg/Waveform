@@ -35,20 +35,30 @@ var gToolboxState		= 0;
 var gToolboxStateMax	= 0;
 
 var gHUDButtons	= new Array();
-gHUDButtons.push( { posX:280, posY:360, width:50, height:50, text:'VERIFY', background:'#C5CE9A', focus:false, enabled:true } );
-gHUDButtons.push( { posX:330, posY:360, width:50, height:50, text:'STEP', background:'#C5CE9A',focus:false, enabled:true } );
-gHUDButtons.push( { posX:380, posY:360, width:50, height:50, text:'STOP', background:'#C5CE9A',focus:false, enabled:true } );
+for ( var i = 0; i < 3; ++i )
+{
+	var texts	= [ 'VERIFY', 'STEP', 'STOP' ];
+	var btnW 	= 50;
+	var btnH 	= 50;
+	var btnX 	= 225 + i * ( btnH + 3 );
+	var btnY 	= 375;
+	gHUDButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], background:'#A0E5FF', focus:false, enabled:true } );	
+}
 
 var gToolButtons = new Array();
-gToolButtons.push( { posX:530, posY:20, width:50, height:50, text:'1 Node', background:'#C5CE9A', focus:true, enabled:true } );
-gToolButtons.push( { posX:530, posY:71, width:50, height:50, text:'2 NOT', background:'#C5CE9A', focus:false, enabled:true } );
-gToolButtons.push( { posX:530, posY:122, width:50, height:50, text:'3 OR', background:'#C5CE9A', focus:false, enabled:true } );
-gToolButtons.push( { posX:530, posY:173, width:50, height:50, text:'4 AND', background:'#C5CE9A', focus:false, enabled:true } );
-gToolButtons.push( { posX:530, posY:224, width:50, height:50, text:'5 CROSS', background:'#C5CE9A', focus:false, enabled:true } );
+for ( var i = 0; i < 5; ++i )
+{
+	var texts	= [ '1 NODE', '2 NOT', '3 OR', '4 AND', '5 CROSS' ];
+	var btnW 	= 50;
+	var btnH 	= 50;
+	var btnX 	= 530;
+	var btnY 	= 20 + i * ( btnH + 3 );
+	gToolButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], background:'#A0E5FF', focus:false, enabled:true } );	
+}
 
 var gEndLevelButtons = new Array();
-gEndLevelButtons.push( { posX:200, posY:300, width:80, height:40, text:'Restart level', background:'#C5CE9A', focus:false, enabled:true } );
-gEndLevelButtons.push( { posX:300, posY:300, width:80, height:40, text:'Next level', background:'#C5CE9A', focus:false, enabled:true } );
+gEndLevelButtons.push( { posX:200, posY:300, width:80, height:40, text:'Restart level', background:'#A0E5FF', focus:false, enabled:true } );
+gEndLevelButtons.push( { posX:300, posY:300, width:80, height:40, text:'Next level', background:'#A0E5FF', focus:false, enabled:true } );
 
 var gMainMenuButtons = new Array();
 for ( var i = 0; i < gLevels.length; ++i )
@@ -329,7 +339,6 @@ var DrawGrid = function()
 	ctx.rect( 0, 0, WIDTH, GRID_OFF_Y + NODE_NUM_Y * TILE_H );
 	ctx.closePath();
 	ctx.fill();
-	ctx.stroke();
 	
 	// background lines
 	ctx.lineWidth 	= 1;
@@ -347,27 +356,6 @@ var DrawGrid = function()
 	}
 	ctx.closePath();
 	ctx.stroke();
-	
-	// 
-	/*
-	ctx.lineWidth	= 2;
-	ctx.strokeStyle	= 'black';
-	ctx.fillStyle 	= '#8ECCBC';
-	ctx.beginPath();
-	var x = 233;
-	var y = 127;
-	var width = 110;
-	var height = 105;
-	var radius = TILE_W * 0.5;
-	ctx.moveTo(x+radius,y);
-    ctx.arcTo(x+width,y,x+width,y+radius,radius);
-	ctx.arcTo(x+width,y+height,x+width-radius,y+height,radius); 
-	ctx.arcTo(x,y+height,x,y+height-radius,radius);
-	ctx.arcTo(x,y,x+radius,y,radius);
-	ctx.closePath();
-	ctx.fill();
-	ctx.stroke();	
-	*/
 
 	// inputs and outputs
 	ctx.strokeStyle		= '#FFDD00';
@@ -472,7 +460,7 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 {
 	ctx.textAlign = 'right';
 	ctx.fillText( text, posX - 5, posY + height * 0.5 + 4 );
-	ctx.strokeStyle = overlay ? '#777777' : '#0030A0';
+	ctx.strokeStyle = overlay ? '#777777' : 'blue';
 	ctx.lineWidth = 2;
 	ctx.beginPath();	
 	for ( var i = 0; i < waveform.length; ++i )
@@ -502,7 +490,7 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 var DrawTestBench = function()
 {
 	var posX 	= 60;
-	var posY 	= 430;
+	var posY 	= 450;
 	var width 	= 16;
 	var height 	= 16;
 	
@@ -514,21 +502,28 @@ var DrawTestBench = function()
 	ctx.fill();
 	ctx.stroke();
 	
-	ctx.fillStyle = 'black';
-	ctx.font = '10px Arial';
-	ctx.textAlign = 'left';
+	ctx.fillStyle 	= 'black';
+	ctx.font 		= '10px Arial';
+	ctx.textAlign 	= 'left';
 	ctx.fillText( 'Cycle: ' + gSimulator.cycle.toString() + '/20' + ' Corectness: ' + gSimulator.score + '%', posX, posY - 20 );
-	ctx.textAlign = 'center';	
 	
 	ctx.strokeStyle = 'gray';
 	ctx.lineWidth = 1;
 	for ( var i = 0; i < gOutput.waveform.length + 1; ++i )
 	{
-		ctx.moveTo( posX + i * width + 0.5, posY + 0.5 - 2 );
-		ctx.lineTo( posX + i * width + 0.5, posY + height * 8 + 0.5 );
+		ctx.moveTo( posX + i * width + 0.5, posY + 0.5 - 10 );
+		ctx.lineTo( posX + i * width + 0.5, posY + height * 2 * ( gInputsArray.length + 1 ) + 0.5 - 5 );
 	}
-	//ctx.moveTo( posX - 50, posY + 0.5 + 26 );
-	//ctx.lineTo( posX + 20 * width + 0.5, posY + 0.5 + 26 );
+	
+	for ( var i = 1; i < gInputsArray.length + 1; ++i )
+	{
+		ctx.moveTo( posX - 50, posY + 0.5 - 2 + i * height * 2 - height * 0.5 );
+		ctx.lineTo( posX + 20 * width + 0.5, posY + 0.5 - 2 + i * height * 2 - height * 0.5 );
+	}
+	//ctx.moveTo( posX - 50, posY + 0.5 + height * 1.5 );
+	//ctx.lineTo( posX + 20 * width + 0.5, posY + 0.5 + height * 1.5 );
+	//ctx.moveTo( posX - 50, posY + 0.5 - 2 + height * 4 );
+	//ctx.lineTo( posX + 20 * width + 0.5, posY + 0.5 - 2 + height * 4 );	
 	//ctx.moveTo( posX - 50, posY + 0.5 + 26 + 40 );
 	//ctx.lineTo( posX + 20 * width + 0.5, posY + 0.5 + 26 + 40 );
 	ctx.stroke();
@@ -538,7 +533,7 @@ var DrawTestBench = function()
 	{
 		var input = gInputsArray[ i ];
 		DrawWaveform( posX, posY, width, height, input.name, input.waveform );	
-		posY += height * 2.5;
+		posY += height * 2.0;
 	}
 
 	DrawWaveform( posX, posY, width, height, 'Output', gOutput.waveform, true );
@@ -598,6 +593,9 @@ var DrawDesc = function()
 		}
 	}
 	ctx.fillText( line, x, y );
+	
+	// draw hint
+	// ctx.fillText( "Use to connect two nodes", 10, 350 );
 }
 
 var DrawEndLevelWindow = function()
@@ -634,7 +632,7 @@ var DrawMainMenu = function()
 	ctx.rect( 0, 0, WIDTH, HEIGHT );
 	ctx.fill();
 	ctx.stroke();
-	
+
 	ctx.font			= '10px Arial';
 	ctx.fillStyle 		= 'black';
 	ctx.textAlign 		= 'center';	
@@ -755,7 +753,7 @@ document.onkeydown = function( e )
 	DrawGame();
 }
 
-document.onmousedown = function( e )
+c.onmousedown = function( e )
 {
 	var mousePosX = e.pageX - c.offsetLeft;
 	var mousePosY = e.pageY - c.offsetTop;
@@ -767,7 +765,7 @@ document.onmousedown = function( e )
 		var tileY 		= Math.floor( posY );
 		var tileSubPosX = posX - tileX;
 		var tileSubPosY = posY - tileY;
-		//console.log( 'mousePos:', mousePosX, mousePosY, 'tile:', tileX, tileY, 'tileSubPos:', tileSubPosX, tileSubPosY );		
+		//console.log( 'mousePos:', mousePosX, mousePosY, 'tile:', tileX, tileY, 'tileSubPos:', tileSubPosX, tileSubPosY );
 
 		if ( gGameState == GameStateEnum.DESIGN || gGameState == GameStateEnum.DEBUG )
 		{
@@ -897,7 +895,7 @@ var DrawGame = function()
 		DrawTestBench();
 		DrawToolbox();
 		DrawHUD();
-		DrawDesc();		
+		DrawDesc();
 	}
 
 	if ( gGameState == GameStateEnum.END_LEVEL )
