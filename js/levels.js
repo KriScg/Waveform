@@ -1,8 +1,8 @@
 var GateTypeEnum =
 {
 	NOT		: 0,
-	AND		: 1,
-	OR		: 2,
+	OR		: 1,
+	AND		: 2,
 	CROSS	: 3
 }
 
@@ -83,8 +83,8 @@ var gLevels = new Array
 	// level 3
 	{
 		name:'.03 Continuous',
-		desc:'Generate continuous signal using AND and NOT gates.',
-		toolboxStateMax:2,
+		desc:'Generate continuous signal using NOT gates.',
+		toolboxStateMax:1,
 		nodes:new Array
 		(
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -119,7 +119,7 @@ var gLevels = new Array
 	// level 4
 	{
 		name:'.04 Maximum',
-		desc:'temp desc',
+		desc:'Try to analyze input and output signals and find the pattern.',
 		toolboxStateMax:2,
 		nodes:new Array
 		(
@@ -208,7 +208,103 @@ var gLevels = new Array
 	
 	// level 6
 	{
-		name:'.06 TEST',
+		name:'.06 Exclusive',
+		desc:'temp desc',
+		toolboxStateMax:3,
+		nodes:new Array
+		(
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		),
+		output:
+		{
+			name:'Output', 
+			nodeX:6, 
+			nodeY:4,
+			waveform:new Array( 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1 )
+		},
+		inputs:new Array
+		(
+			{
+				name:'InputA',
+				nodeX:2,
+				nodeY:4,
+				waveform:new Array( 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 )
+			},
+			{
+				name:'InputB',
+				nodeX:2,
+				nodeY:5,
+				waveform:new Array( 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 )
+			},
+			{
+				name:'InputC',
+				nodeX:2,
+				nodeY:6,
+				waveform:new Array( 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 )
+			}	
+		),
+	},	
+	
+	// level 7
+	{
+		name:'.07 Selector2',
+		desc:'temp desc',
+		toolboxStateMax:3,
+		nodes:new Array
+		(
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		),
+		output:
+		{
+			name:'Output', 
+			nodeX:6, 
+			nodeY:4,
+			waveform:new Array( 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1 )
+		},
+		inputs:new Array
+		(
+			{
+				name:'InputA',
+				nodeX:2,
+				nodeY:4,
+				waveform:new Array( 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 )
+			},
+			{
+				name:'InputB',
+				nodeX:2,
+				nodeY:5,
+				waveform:new Array( 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 )
+			},
+			{
+				name:'InputC',
+				nodeX:2,
+				nodeY:6,
+				waveform:new Array( 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 )
+			}	
+		),
+	},	
+	
+	// level 8
+	{
+		name:'.08 TEST',
 		desc:'temp desc',
 		toolboxStateMax:4,
 		nodes:new Array

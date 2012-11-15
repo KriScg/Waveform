@@ -89,9 +89,9 @@ var SimulateReset = function()
 	var arrLen = gNodeArray.length;
 	for ( var i = 0; i < arrLen; ++i )
 	{
-		gNodeArray[ i ].connDownState 	= 2;
-		gNodeArray[ i ].connRightState 	= 2;
-		gNodeArray[ i ].state			= 2;
+		gNodeArray[ i ].connDownState 	= 0;
+		gNodeArray[ i ].connRightState 	= 0;
+		gNodeArray[ i ].state			= 0;
 		gNodeArray[ i ].constState		= -1;
 	}
 }
@@ -131,7 +131,7 @@ var InitLevel = function( levelID )
 		{
 			var i = x + y * NODE_NUM_X;
 			var enabledNode = level.nodes[ i ] != 0;
-			gNodeArray[ i ] = { enabled:enabledNode, connDown:false, connRight:false, connDownState:2, connRightState:2, state:2, constState:-1 };
+			gNodeArray[ i ] = { enabled:enabledNode, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0, constState:-1 };
 		}
 	}
 
@@ -258,6 +258,15 @@ var SimulateSubCycle = function()
 				gDirtyNodeArray.push( { currID:inputNodeID, prevID:-1 } );
 			}
 		}
+		
+		var gateArrLen = gGateArray.length;
+		for ( var j = 0; j < gateArrLen; ++j )
+		{
+			var gate = gGateArray[ j ];
+			var newStates = EvaluateGateStates( gate );
+			WriteState2( newStates[ 0 ], gate.dstNodeA );
+			WriteState2( newStates[ 1 ], gate.dstNodeB );
+		}
 	}
 
 	// verify gate conditions
@@ -378,7 +387,7 @@ var DrawDesign = function()
 	ctx.stroke();	
 	
 
-
+	// draw connections
 	ctx.strokeStyle = '#FFDD00';
 	ctx.lineWidth 	= 3;
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
@@ -418,6 +427,7 @@ var DrawDesign = function()
 		DrawGate( gGateArray[ i ].type, gGateArray[ i ].nodeX, gGateArray[ i ].nodeY, gGateArray[ i ].rotation )
 	}
 
+	// draw nodes
 	ctx.strokeStyle = '#FFDD00';
 	ctx.fillStyle 	= 'green';
 	ctx.lineWidth 	= 2;
@@ -706,7 +716,7 @@ var OnTileMouseDown = function( tileX, tileY )
 		if ( tileX >= 0 && tileY >= 0 && tileX + 1 < NODE_NUM_X && tileY + 1 < NODE_NUM_Y )
 		if ( gNodeArray[ tileID ].enabled && gNodeArray[ tileID + 1 ].enabled && gNodeArray[ tileID + NODE_NUM_X ].enabled && gNodeArray[ tileID + NODE_NUM_X + 1 ].enabled )
 		{
-			var newGateType	= GateTypeEnum.AND + gToolboxState - 2;
+			var newGateType	= GateTypeEnum.OR + gToolboxState - 2;
 			var oldGateType	= null;
 			for ( var j = 0; j < gGateArray.length; ++j )
 			{
@@ -722,6 +732,15 @@ var OnTileMouseDown = function( tileX, tileY )
 			if ( oldGateType != newGateType )
 			{
 				gGateArray.push( { type:newGateType, srcNodeA:tileID, srcNodeB:tileID+NODE_NUM_X, dstNodeA:tileID+1, dstNodeB:tileID+1+NODE_NUM_X, nodeX:tileX, nodeY:tileY, rotation:0 } );
+				
+				if ( newGateType == GateTypeEnum.CROSS )
+				{
+					gGateArray[ gGateArray.length - 1 ].srcNodeA = tileID+1;
+					gGateArray[ gGateArray.length - 1 ].srcNodeB = tileID+1+NODE_NUM_X;
+					gGateArray[ gGateArray.length - 1 ].dstNodeA = tileID;
+					gGateArray[ gGateArray.length - 1 ].dstNodeB = tileID+NODE_NUM_X;
+				}
+				
 				gNodeArray[ tileID ].connDown = false;
 				gNodeArray[ tileID ].connRight = false;
 				gNodeArray[ tileID + 1 ].connDown = false;
@@ -737,21 +756,14 @@ var OnButtonMouseDown = function( button, mousePosX, mousePosY )
 }
 
 document.onkeydown = function( e )
-{
-	// tempshit debug stuff
-	switch ( e.keyCode )
+{	
+	if ( e.keyCode >= 49 && e.keyCode <= 58 )
 	{
-		case 49: SelectTool( 0 ); break;
-		case 50: SelectTool( 1 ); break;
-		case 51: SelectTool( 2 ); break;
-		case 52: SelectTool( 3 ); break;
-		case 53: SelectTool( 4 ); break;
-		case 97: InitLevel( 0 ); break;
-		case 98: InitLevel( 1 ); break;
-		case 99: InitLevel( 2 ); break;
-		case 100: InitLevel( 3 ); break;
-		case 101: InitLevel( 4 ); break;
-		case 102: InitLevel( 5 ); break;
+		SelectTool( e.keyCode - 49 )
+	}
+	else if ( e.keyCode >= 97 && e.keyCode <= 105 && gLevels.length > e.keyCode - 97 )
+	{
+		InitLevel( e.keyCode - 97 );
 	}
 	
 	DrawGame();
@@ -843,8 +855,7 @@ c.onmousedown = function( e )
 				}
 			}
 		}
-
-		if ( gGameState == GameStateEnum.END_LEVEL )
+		else if ( gGameState == GameStateEnum.END_LEVEL )
 		{
 			var len = gEndLevelButtons.length;
 			for ( var i = 0; i < len; ++i )
@@ -871,8 +882,7 @@ c.onmousedown = function( e )
 				}
 			}
 		}
-		
-		if ( gGameState == GameStateEnum.QUESTION )
+		else if ( gGameState == GameStateEnum.QUESTION )
 		{
 			var len = gQuestionButtons.length;
 			for ( var i = 0; i < len; ++i )
@@ -891,9 +901,8 @@ c.onmousedown = function( e )
 					}
 				}
 			}
-		}		
-
-		if ( gGameState == GameStateEnum.MAIN_MENU )
+		}
+		else if ( gGameState == GameStateEnum.MAIN_MENU )
 		{		
 			var len = gMainMenuButtons.length;
 			for ( var i = 0; i < len; ++i )
@@ -904,7 +913,7 @@ c.onmousedown = function( e )
 					break;
 				}
 			}
-		}
+		}	
 	}
 	
 	DrawGame();
