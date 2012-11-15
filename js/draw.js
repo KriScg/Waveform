@@ -101,6 +101,7 @@ var DrawButton = function( button )
 	{		
 		DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, button.focus ? 'red' : 'black', button.background );
 
+		ctx.font			= '10px Arial';
 		ctx.textAlign 		= 'center';		
 		ctx.textBaseline 	= 'middle';
 		ctx.fillStyle 		= 'black'
@@ -121,5 +122,33 @@ var DrawRoundedRect = function( x, y, width, height, radius, lineWidth, strokeSt
 	ctx.arcTo(x,y,x+radius,y,radius);
 	ctx.closePath();
 	ctx.fill();
+	ctx.stroke();
+}
+
+var DrawGrid = function()
+{
+	// solid background
+	ctx.strokeStyle = 'black';
+	ctx.fillStyle = '#8ECCBC';	
+	ctx.beginPath();
+	ctx.rect( 0, 0, WIDTH, HEIGHT );
+	ctx.closePath();
+	ctx.fill();
+	
+	// background lines
+	ctx.lineWidth 	= 1;
+	ctx.strokeStyle = '#87C1B1';
+	ctx.beginPath();
+	for ( var i = 0; i < 34; ++i )
+	{
+		ctx.moveTo( 0.5, 0.5 + TILE_H * i * 0.5 );
+		ctx.lineTo( WIDTH + 0.5, 0.5 + TILE_H * i * 0.5 );
+	}
+	for ( var i = 0; i < 34; ++i )
+	{
+		ctx.moveTo( 0.5 + i * TILE_W * 0.5, 0.5 );
+		ctx.lineTo( 0.5 + i * TILE_W * 0.5, HEIGHT + 0.5 );
+	}
+	ctx.closePath();
 	ctx.stroke();
 }

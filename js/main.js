@@ -27,23 +27,26 @@ var GameStateEnum =
 	DEBUG 		: 1,
 	VERIFY 		: 2,
 	END_LEVEL	: 3,
-	MAIN_MENU	: 4
+	QUESTION	: 4,
+	MAIN_MENU	: 5
 }
-var gGameStateDesc		= new Array( 'Designing', 'Debugging', 'Verifying', 'Completed', 'Menu' )
+var gGameStateDesc		= new Array( 'Designing', 'Debugging', 'Verifying', 'Completed', 'Designing', 'Menu' )
 var gGameState			= GameStateEnum.DEBUG;
 var gToolboxState		= 0;
 var gToolboxStateMax	= 0;
 
 var gHUDButtons	= new Array();
-for ( var i = 0; i < 3; ++i )
+for ( var i = 0; i < 4; ++i )
 {
-	var texts	= [ 'VERIFY', 'STEP', 'STOP' ];
-	var btnW 	= 50;
-	var btnH 	= 50;
-	var btnX 	= 225 + i * ( btnH + 3 );
-	var btnY 	= 375;
+	var texts	= [ 'VERIFY', 'STEP', 'STOP', 'MENU' ];
+	var btnW 	= 60;
+	var btnH 	= 30;
+	var btnX 	= 195 + i * ( btnW + 3 );
+	var btnY 	= 380;
 	gHUDButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], background:'#A0E5FF', focus:false, enabled:true } );	
 }
+gHUDButtons[ 3 ].posX = 530;
+gHUDButtons[ 3 ].posY = 560;
 
 var gToolButtons = new Array();
 for ( var i = 0; i < 5; ++i )
@@ -53,12 +56,16 @@ for ( var i = 0; i < 5; ++i )
 	var btnH 	= 50;
 	var btnX 	= 530;
 	var btnY 	= 20 + i * ( btnH + 3 );
-	gToolButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], background:'#A0E5FF', focus:false, enabled:true } );	
+	gToolButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], background:'#A0E5FF', focus:false, enabled:true } );
 }
 
 var gEndLevelButtons = new Array();
-gEndLevelButtons.push( { posX:200, posY:300, width:80, height:40, text:'Restart level', background:'#A0E5FF', focus:false, enabled:true } );
-gEndLevelButtons.push( { posX:300, posY:300, width:80, height:40, text:'Next level', background:'#A0E5FF', focus:false, enabled:true } );
+gEndLevelButtons.push( { posX:210, posY:320, width:80, height:40, text:'Restart level', background:'#A0E5FF', focus:false, enabled:true } );
+gEndLevelButtons.push( { posX:310, posY:320, width:80, height:40, text:'Next level', background:'#A0E5FF', focus:false, enabled:true } );
+
+var gQuestionButtons = new Array();
+gQuestionButtons.push( { posX:210, posY:320, width:80, height:40, text:'Yes', background:'#A0E5FF', focus:false, enabled:true } );
+gQuestionButtons.push( { posX:310, posY:320, width:80, height:40, text:'No', background:'#A0E5FF', focus:false, enabled:true } );
 
 var gMainMenuButtons = new Array();
 for ( var i = 0; i < gLevels.length; ++i )
@@ -68,7 +75,7 @@ for ( var i = 0; i < gLevels.length; ++i )
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
-	gMainMenuButtons.push( { posX:150 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, background:'#C5CE9A', focus:false, enabled:true } );
+	gMainMenuButtons.push( { posX:150 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, background:'#A0E5FF', focus:false, enabled:true } );
 }
 
 var SimulateReset = function()
@@ -142,7 +149,7 @@ var Verify = function()
 		if ( gSimulator.cycle < gOutput.waveform.length )
 		{
 			SimulateCycle();
-			gVerifyLoop = setTimeout( Verify, 250 );
+			gVerifyLoop = setTimeout( Verify, 200 );
 		}
 		else
 		{
@@ -330,32 +337,9 @@ var Clear = function()
 	ctx.clearRect( 0, 0, WIDTH, HEIGHT );
 }
 
-var DrawGrid = function()
+var DrawDesign = function()
 {
-	// solid background
-	ctx.strokeStyle = 'black';
-	ctx.fillStyle = '#8ECCBC';	
-	ctx.beginPath();
-	ctx.rect( 0, 0, WIDTH, GRID_OFF_Y + NODE_NUM_Y * TILE_H );
-	ctx.closePath();
-	ctx.fill();
-	
-	// background lines
-	ctx.lineWidth 	= 1;
-	ctx.strokeStyle = '#87C1B1';
-	ctx.beginPath();
-	for ( var i = 0; i < 21; ++i )
-	{
-		ctx.moveTo( 0.5, 0.5 + TILE_H * i * 0.5 );
-		ctx.lineTo( WIDTH + 0.5, 0.5 + TILE_H * i * 0.5 );
-	}
-	for ( var i = 0; i < 34; ++i )
-	{
-		ctx.moveTo( 0.5 + i * TILE_W * 0.5, 0.5 );
-		ctx.lineTo( 0.5 + i * TILE_W * 0.5, HEIGHT + 0.5 );
-	}
-	ctx.closePath();
-	ctx.stroke();
+	DrawGrid();
 
 	// inputs and outputs
 	ctx.strokeStyle		= '#FFDD00';
@@ -560,7 +544,7 @@ var DrawHUD = function()
 	ctx.font		= '10px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';	
-	ctx.fillText( gLevels[ gCurrLevelID ].name + ' - ' + gGameStateDesc[ gGameState ] + '... Tool:' + gToolboxState, 10, 20 );
+	ctx.fillText( gLevels[ gCurrLevelID ].name + ' - ' + gGameStateDesc[ gGameState ], 10, 20 );
 }
 
 var DrawDesc = function()
@@ -600,15 +584,15 @@ var DrawDesc = function()
 
 var DrawEndLevelWindow = function()
 {
-	var windowW = 300;
-	var windowH = 200;
+	var windowW = 250;
+	var windowH = 170;
 
 	ctx.strokeStyle = 'black';
 	ctx.fillStyle = '#F2FACF';
 	ctx.beginPath();
 	ctx.rect( ( WIDTH - windowW ) * 0.5, ( HEIGHT - windowH ) * 0.5, windowW, windowH );
 	ctx.fill();
-	ctx.stroke();
+	ctx.stroke();	
 	
 	ctx.font			= '10px Arial';
 	ctx.fillStyle		= 'black';
@@ -624,14 +608,34 @@ var DrawEndLevelWindow = function()
 	}
 }
 
-var DrawMainMenu = function()
+var DrawQuestionWindow = function()
 {
+	var windowW = 250;
+	var windowH = 170;
+
 	ctx.strokeStyle = 'black';
 	ctx.fillStyle = '#F2FACF';
 	ctx.beginPath();
-	ctx.rect( 0, 0, WIDTH, HEIGHT );
+	ctx.rect( ( WIDTH - windowW ) * 0.5, ( HEIGHT - windowH ) * 0.5, windowW, windowH );
 	ctx.fill();
-	ctx.stroke();
+	ctx.stroke();	
+	
+	ctx.font			= '10px Arial';
+	ctx.fillStyle		= 'black';
+	ctx.textAlign		= 'center';	
+	ctx.textBaseline	= 'middle';
+	ctx.fillText( 'Do you want to return to main menu?', WIDTH * 0.5, HEIGHT * 0.5 - 30 );
+	
+	var len = gQuestionButtons.length;
+	for ( var i = 0; i < len; ++i )
+	{
+		DrawButton( gQuestionButtons[ i ] );
+	}
+}
+
+var DrawMainMenu = function()
+{
+	DrawGrid();
 
 	ctx.font			= '10px Arial';
 	ctx.fillStyle 		= 'black';
@@ -831,6 +835,10 @@ c.onmousedown = function( e )
 							gGameState = GameStateEnum.DESIGN;					
 							SimulateReset();
 							break;
+							
+						case 3: 
+							gGameState = GameStateEnum.QUESTION;
+							break;							
 					}
 				}
 			}
@@ -863,6 +871,27 @@ c.onmousedown = function( e )
 				}
 			}
 		}
+		
+		if ( gGameState == GameStateEnum.QUESTION )
+		{
+			var len = gQuestionButtons.length;
+			for ( var i = 0; i < len; ++i )
+			{
+				if ( OnButtonMouseDown( gQuestionButtons[ i ], mousePosX, mousePosY ) )
+				{
+					switch ( i )
+					{
+						case 0:
+							gGameState = GameStateEnum.MAIN_MENU;
+							break;
+
+						case 1:
+							gGameState = GameStateEnum.DESIGN;
+							break;
+					}
+				}
+			}
+		}		
 
 		if ( gGameState == GameStateEnum.MAIN_MENU )
 		{		
@@ -872,7 +901,7 @@ c.onmousedown = function( e )
 				if ( OnButtonMouseDown( gMainMenuButtons[ i ], mousePosX, mousePosY ) )
 				{
 					InitLevel( i );
-					gGameState = gGameState.DESIGN;
+					break;
 				}
 			}
 		}
@@ -891,7 +920,7 @@ var DrawGame = function()
 	}
 	else
 	{
-		DrawGrid();	
+		DrawDesign();	
 		DrawTestBench();
 		DrawToolbox();
 		DrawHUD();
@@ -901,7 +930,12 @@ var DrawGame = function()
 	if ( gGameState == GameStateEnum.END_LEVEL )
 	{
 		DrawEndLevelWindow();
-	}	
+	}
+	
+	if ( gGameState == GameStateEnum.QUESTION )
+	{
+		DrawQuestionWindow();
+	}
 }
 
 DrawGame();
