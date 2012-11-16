@@ -119,7 +119,7 @@ var gLevels = new Array
 	// level 4
 	{
 		name:'.04 Maximum',
-		desc:'Try to analyze input and output signals and find the pattern.',
+		desc:'Try to analyze input and output signals and find the pattern. Remember to use new available gate type - OR. It produces HI if any of it\'s inputs are HI',
 		toolboxStateMax:2,
 		nodes:new Array
 		(
@@ -160,8 +160,8 @@ var gLevels = new Array
 	
 	// level 5
 	{
-		name:'.05 Selector',
-		desc:'temp desc',
+		name:'.05 Conditional',
+		desc:'New gate type is available - AND. It produces HI signal only if both inputs are HI.',
 		toolboxStateMax:3,
 		nodes:new Array
 		(
@@ -181,7 +181,7 @@ var gLevels = new Array
 			name:'Output', 
 			nodeX:6, 
 			nodeY:4,
-			waveform:new Array( 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1 )
+			waveform:new Array( 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1 )
 		},
 		inputs:new Array
 		(
@@ -196,20 +196,14 @@ var gLevels = new Array
 				nodeX:2,
 				nodeY:5,
 				waveform:new Array( 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 )
-			},
-			{
-				name:'InputC',
-				nodeX:2,
-				nodeY:6,
-				waveform:new Array( 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 )
-			}	
+			}
 		),
 	},
 	
 	// level 6
 	{
 		name:'.06 Exclusive',
-		desc:'temp desc',
+		desc:'...',
 		toolboxStateMax:3,
 		nodes:new Array
 		(
@@ -229,8 +223,9 @@ var gLevels = new Array
 			name:'Output', 
 			nodeX:6, 
 			nodeY:4,
-			waveform:new Array( 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1 )
+			waveform:new Array( 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1 )
 		},
+		
 		inputs:new Array
 		(
 			{
@@ -243,21 +238,15 @@ var gLevels = new Array
 				name:'InputB',
 				nodeX:2,
 				nodeY:5,
-				waveform:new Array( 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 )
-			},
-			{
-				name:'InputC',
-				nodeX:2,
-				nodeY:6,
-				waveform:new Array( 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 )
-			}	
+				waveform:new Array( 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0 )
+			}
 		),
 	},	
 	
 	// level 7
 	{
-		name:'.07 Selector2',
-		desc:'temp desc',
+		name:'.07 Selector',
+		desc:'...',
 		toolboxStateMax:3,
 		nodes:new Array
 		(
@@ -305,7 +294,7 @@ var gLevels = new Array
 	// level 8
 	{
 		name:'.08 TEST',
-		desc:'temp desc',
+		desc:'...',
 		toolboxStateMax:4,
 		nodes:new Array
 		(
