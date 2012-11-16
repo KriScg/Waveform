@@ -98,7 +98,7 @@ var DrawCross = function()
 var DrawButton = function( button )
 {
 	if ( button.enabled )
-	{		
+	{
 		DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, button.focus ? 'red' : 'black', button.background );
 
 		ctx.font			= '12px Arial';
@@ -150,5 +150,19 @@ var DrawGrid = function()
 		ctx.lineTo( 0.5 + i * TILE_W * 0.5, HEIGHT + 0.5 );
 	}
 	ctx.closePath();
+	ctx.stroke();
+}
+
+var DrawDoneIcon = function( posX, posY )
+{
+	ctx.strokeStyle = 'black';
+	ctx.fillStyle 	= 'black';
+	ctx.lineCap 	= 'round';	
+	ctx.lineWidth	= 6;
+	ctx.beginPath();
+	ctx.moveTo( posX, posY );
+	ctx.lineTo( posX - 10, posY - 14 );
+	ctx.moveTo( posX, posY );
+	ctx.lineTo( posX + 15, posY - 25 );
 	ctx.stroke();
 }

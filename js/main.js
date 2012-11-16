@@ -8,18 +8,19 @@ var WIDTH 				= 600,
 	GRID_OFF_Y			= TILE_H,
 	SUBCYCLE_NUM		= 40,
 	SUBCYCLE_STABLE_NUM	= 20,
-	c 				= document.getElementById('c'), 
-	ctx 			= c.getContext('2d');			
-	c.width 		= WIDTH;
-	c.height 		= HEIGHT;
-var gNodeArray 		= new Array();
-var gGateArray		= new Array();
-var gDirtyNodeArray	= new Array();
-var gInputsArray 	= new Array();
+	c 					= document.getElementById('c'), 
+	ctx 				= c.getContext('2d');			
+	c.width 			= WIDTH;
+	c.height 			= HEIGHT;
+var gNodeArray 			= new Array();
+var gGateArray			= new Array();
+var gDirtyNodeArray		= new Array();
+var gInputsArray 		= new Array();
 var gOutput;
-var gSimulator		= { cycle:0, subCycle:0, score:0, waveform:new Array() };
-var gCurrLevelID	= 0;
-var gStateToColor 	= new Array( '#0000FF', '#FF0000', '#FF00FF' );
+var gSimulator			= { cycle:0, subCycle:0, score:0, waveform:new Array() };
+var gCurrLevelID		= 0;
+var gUnlockedLevelID 	= 0;
+var gStateToColor 		= new Array( '#0000FF', '#FF0000', '#FF00FF' );
 
 var GameStateEnum =
 {
@@ -156,6 +157,7 @@ var Verify = function()
 			gGameState = GameStateEnum.DESIGN;
 			if ( gSimulator.score == 100 )
 			{
+				gUnlockedLevelID = Math.max( gUnlockedLevelID, gCurrLevelID + 1 );
 				gGameState = GameStateEnum.END_LEVEL;
 			}
 		}
@@ -355,36 +357,58 @@ var DrawDesign = function()
 	ctx.fillStyle		= 'black';
 	ctx.font			= '12px Arial';
 	ctx.textAlign 		= 'right';
-	ctx.textBaseline	= 'bottom';
+	ctx.textBaseline	= 'middle';
 	ctx.lineWidth		= 2;
 
 	var arrLen = gInputsArray.length;
 	for ( var i = 0; i < arrLen; ++i )
 	{
 		var input = gInputsArray[ i ];
-		ctx.fillText( input.name, GRID_OFF_X - 10 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H - 3 );
+		ctx.fillStyle = 'black';
+		ctx.fillText( input.name, GRID_OFF_X - 33 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
+		
+		ctx.fillStyle = '#FFDD00';
 		if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
 		{
 			ctx.strokeStyle = gStateToColor[ gNodeArray[ input.nodeX + input.nodeY * NODE_NUM_X ].state ];
+			ctx.fillStyle 	= gStateToColor[ gNodeArray[ input.nodeX + input.nodeY * NODE_NUM_X ].state ];;
 		}
+		
 		ctx.beginPath();
-		ctx.moveTo( GRID_OFF_X - 40 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
+		ctx.moveTo( GRID_OFF_X - 30 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		ctx.lineTo( GRID_OFF_X + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
-		ctx.closePath();
 		ctx.stroke();
+
+		ctx.beginPath();
+		ctx.moveTo( GRID_OFF_X + input.nodeX * TILE_W - 5, GRID_OFF_Y + input.nodeY * TILE_H );
+		ctx.lineTo( GRID_OFF_X + input.nodeX * TILE_W - 6 - 5, GRID_OFF_Y + input.nodeY * TILE_H - 6 );
+		ctx.lineTo( GRID_OFF_X + input.nodeX * TILE_W - 6 - 5, GRID_OFF_Y + input.nodeY * TILE_H + 6 );
+		ctx.closePath();
+		ctx.fill();
 	}
 	
-	ctx.textAlign = 'left';
-	ctx.fillText( gOutput.name, GRID_OFF_X + 10 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H - 3 );
+	ctx.fillStyle		= 'black';
+	ctx.textAlign 		= 'left';
+	ctx.textBaseline	= 'middle';
+	ctx.fillText( gOutput.name, GRID_OFF_X + 32 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+
+	ctx.fillStyle = '#FFDD00';
 	if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
 	{
 		ctx.strokeStyle = gStateToColor[ gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state ];
+		ctx.fillStyle	= gStateToColor[ gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state ];
 	}		
 	ctx.beginPath();
-	ctx.moveTo( GRID_OFF_X + 40 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.moveTo( GRID_OFF_X + 30 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
-	ctx.closePath();
 	ctx.stroke();	
+	
+	ctx.beginPath();
+	ctx.moveTo( GRID_OFF_X + gOutput.nodeX * TILE_W + 31, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W - 6 + 31, GRID_OFF_Y + gOutput.nodeY * TILE_H - 6 );
+	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W - 6 + 31, GRID_OFF_Y + gOutput.nodeY * TILE_H + 6 );
+	ctx.closePath();
+	ctx.fill();	
 	
 
 	// draw connections
@@ -563,9 +587,10 @@ var DrawHUD = function()
 
 var DrawDesc = function()
 {	
-	ctx.font 		= '12px Arial';
-	ctx.fillStyle 	= 'black';
-	ctx.textAlign 	= 'left';
+	ctx.font 			= '12px Arial';
+	ctx.fillStyle 		= 'black';
+	ctx.textAlign 		= 'left';
+	ctx.textBaseline 	= 'middle';
 	
 	var x = 420;
 	var y = 420;
@@ -657,11 +682,17 @@ var DrawMainMenu = function()
 	ctx.textBaseline 	= 'middle';
 	ctx.fillText( 'WAVEFORM', WIDTH * 0.5, 100 );
 	ctx.fillText( 'Select level', WIDTH * 0.5, 130 );
+	ctx.fillText( 'Progress: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 150 );
 	
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )
 	{
+		gMainMenuButtons[ i ].background = i <= gUnlockedLevelID ? '#A0E5FF' : '#6C7E84';
 		DrawButton( gMainMenuButtons[ i ] );
+		if ( i < gUnlockedLevelID )
+		{
+			DrawDoneIcon( gMainMenuButtons[ i ].posX + 18, gMainMenuButtons[ i ].posY + gMainMenuButtons[ i ].height * 0.7 );
+		}
 	}	
 }
 
@@ -911,7 +942,7 @@ c.onmousedown = function( e )
 			var len = gMainMenuButtons.length;
 			for ( var i = 0; i < len; ++i )
 			{
-				if ( OnButtonMouseDown( gMainMenuButtons[ i ], mousePosX, mousePosY ) )
+				if ( OnButtonMouseDown( gMainMenuButtons[ i ], mousePosX, mousePosY ) && i <= gUnlockedLevelID )
 				{
 					InitLevel( i );
 					break;
