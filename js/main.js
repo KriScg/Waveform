@@ -19,7 +19,7 @@ var gInputsArray 		= new Array();
 var gOutput;
 var gSimulator			= { cycle:0, subCycle:0, score:0, waveform:new Array() };
 var gCurrLevelID		= 0;
-var gUnlockedLevelID 	= 0;
+var gUnlockedLevelID 	= 5;
 var gStateToColor 		= new Array( '#0000FF', '#FF0000', '#FF00FF' );
 
 var GameStateEnum =
@@ -71,12 +71,12 @@ gQuestionButtons.push( { posX:310, posY:320, width:80, height:40, text:'No', bac
 var gMainMenuButtons = new Array();
 for ( var i = 0; i < gLevels.length; ++i )
 { 
-	var btnW 	= 100;
+	var btnW 	= 120;
 	var btnH 	= 50;
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
-	gMainMenuButtons.push( { posX:150 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, background:'#A0E5FF', focus:false, enabled:true } );
+	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, background:'#A0E5FF', focus:false, enabled:true } );
 }
 
 var SimulateReset = function()
@@ -413,7 +413,7 @@ var DrawDesign = function()
 
 	// draw connections
 	ctx.strokeStyle = '#FFDD00';
-	ctx.lineWidth 	= 3;
+	ctx.lineWidth 	= 4;
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
 		for ( var x = 0; x < NODE_NUM_X; ++x )
@@ -448,7 +448,7 @@ var DrawDesign = function()
 	var arrLen = gGateArray.length;
 	for ( var i = 0; i < arrLen; ++i )
 	{
-		DrawGate( gGateArray[ i ].type, gGateArray[ i ].nodeX, gGateArray[ i ].nodeY, gGateArray[ i ].rotation )
+		DrawGate( gGateArray[ i ].type, gGateArray[ i ].nodeX, gGateArray[ i ].nodeY )
 	}
 
 	// draw nodes
@@ -582,7 +582,7 @@ var DrawHUD = function()
 	ctx.font		= '12px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';	
-	ctx.fillText( gLevels[ gCurrLevelID ].name + ' - ' + gGameStateDesc[ gGameState ], 10, 20 );
+	ctx.fillText( gLevels[ gCurrLevelID ].name + ' - ' + gGameStateDesc[ gGameState ] + '...', 10, 20 );
 }
 
 var DrawDesc = function()
@@ -691,7 +691,7 @@ var DrawMainMenu = function()
 		DrawButton( gMainMenuButtons[ i ] );
 		if ( i < gUnlockedLevelID )
 		{
-			DrawDoneIcon( gMainMenuButtons[ i ].posX + 18, gMainMenuButtons[ i ].posY + gMainMenuButtons[ i ].height * 0.7 );
+			DrawDoneIcon( gMainMenuButtons[ i ].posX + 12, gMainMenuButtons[ i ].posY + gMainMenuButtons[ i ].height * 0.6 );
 		}
 	}	
 }
@@ -737,7 +737,7 @@ var OnEdgeMouseDown = function( nodeX, nodeY, right )
 		}
 		else if ( gToolboxState == 1 && right && oldGateType != GateTypeEnum.NOT )
 		{
-			gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:nodeID, srcNodeB:-1, dstNodeA:nodeID+1, dstNodeB:-1, nodeX:nodeX, nodeY:nodeY, rotation:0 } );
+			gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:nodeID, srcNodeB:-1, dstNodeA:nodeID+1, dstNodeB:-1, nodeX:nodeX, nodeY:nodeY } );
 			gNodeArray[ nodeID ].connRight = false;
 		}
 	}
@@ -766,14 +766,11 @@ var OnTileMouseDown = function( tileX, tileY )
 
 			if ( oldGateType != newGateType )
 			{
-				gGateArray.push( { type:newGateType, srcNodeA:tileID, srcNodeB:tileID+NODE_NUM_X, dstNodeA:tileID+1, dstNodeB:tileID+1+NODE_NUM_X, nodeX:tileX, nodeY:tileY, rotation:0 } );
+				gGateArray.push( { type:newGateType, srcNodeA:tileID, srcNodeB:tileID+NODE_NUM_X, dstNodeA:tileID+1, dstNodeB:tileID+1+NODE_NUM_X, nodeX:tileX, nodeY:tileY } );
 				
 				if ( newGateType == GateTypeEnum.CROSS )
 				{
-					gGateArray[ gGateArray.length - 1 ].srcNodeA = tileID+1;
-					gGateArray[ gGateArray.length - 1 ].srcNodeB = tileID+1+NODE_NUM_X;
-					gGateArray[ gGateArray.length - 1 ].dstNodeA = tileID;
-					gGateArray[ gGateArray.length - 1 ].dstNodeB = tileID+NODE_NUM_X;
+					gGateArray.push( { type:newGateType, srcNodeA:tileID+1, srcNodeB:tileID+NODE_NUM_X+1, dstNodeA:tileID, dstNodeB:tileID+NODE_NUM_X, nodeX:tileX, nodeY:tileY } );
 				}
 				
 				gNodeArray[ tileID ].connDown = false;
@@ -796,10 +793,16 @@ document.onkeydown = function( e )
 	{
 		SelectTool( e.keyCode - 49 )
 	}
-	else if ( e.keyCode >= 97 && e.keyCode <= 105 && gLevels.length > e.keyCode - 97 )
+	else if ( e.keyCode == 98 && gCurrLevelID + 1 < gLevels.length )
 	{
-		InitLevel( e.keyCode - 97 );
+		// tempshit debug
+		InitLevel( gCurrLevelID + 1 );
 	}
+	else if ( e.keyCode == 97 && gCurrLevelID > 0 )
+	{
+		// tempshit debug
+		InitLevel( gCurrLevelID - 1 );
+	}	
 	
 	DrawGame();
 }

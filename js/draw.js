@@ -1,26 +1,31 @@
-var DrawGate = function( type, nodeX, nodeY, rotation )
+var DrawGate = function( type, nodeX, nodeY )
 {
 	ctx.save();
 	if ( type == GateTypeEnum.NOT )
 	{
 		ctx.translate( GRID_OFF_X + ( nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + nodeY * TILE_H );
 	}
+	else if ( type == GateTypeEnum.CROSS )
+	{
+		
+	}
 	else
 	{
 		ctx.translate( GRID_OFF_X + ( nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + ( nodeY + 0.5 ) * TILE_H );
 	}
-	ctx.rotate( rotation )
 
 	ctx.strokeStyle = 'black';
 	ctx.lineWidth = 2;
 	ctx.beginPath();
 	
+	var posX = GRID_OFF_X + nodeX * TILE_W;
+	var posY = GRID_OFF_Y + nodeY * TILE_H;
 	switch ( type )
 	{
-		case GateTypeEnum.NOT: 		DrawNOT(); 		break;
-		case GateTypeEnum.AND: 		DrawAND(); 		break;
-		case GateTypeEnum.OR: 		DrawOR(); 		break;
-		case GateTypeEnum.CROSS: 	DrawCross(); 	break;
+		case GateTypeEnum.NOT: 		DrawNOT();	break;
+		case GateTypeEnum.AND: 		DrawAND();	break;
+		case GateTypeEnum.OR: 		DrawOR(); 	break;
+		case GateTypeEnum.CROSS: 	DrawCross( posX, posY ); break;
 	}
 
 	ctx.stroke();
@@ -89,10 +94,12 @@ var DrawOR = function()
 	DrawGateOutputs();	
 }
 
-var DrawCross = function()
+var DrawCross = function( posX, posY )
 {
-	DrawGateInputs();
-	DrawGateOutputs();
+	ctx.moveTo( posX, posY );
+	ctx.lineTo( posX + TILE_W, posY + TILE_H );
+	ctx.moveTo( posX + TILE_W, posY );
+	ctx.lineTo( posX, posY + TILE_H );
 }
 
 var DrawButton = function( button )
@@ -102,7 +109,7 @@ var DrawButton = function( button )
 		DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, button.focus ? 'red' : 'black', button.background );
 
 		ctx.font			= '12px Arial';
-		ctx.textAlign 		= 'center';		
+		ctx.textAlign 		= 'center';
 		ctx.textBaseline 	= 'middle';
 		ctx.fillStyle 		= 'black'
 		ctx.fillText( button.text, button.posX + button.width * 0.5, button.posY + button.height * 0.5 );
@@ -158,11 +165,11 @@ var DrawDoneIcon = function( posX, posY )
 	ctx.strokeStyle = 'black';
 	ctx.fillStyle 	= 'black';
 	ctx.lineCap 	= 'round';	
-	ctx.lineWidth	= 6;
+	ctx.lineWidth	= 4;
 	ctx.beginPath();
 	ctx.moveTo( posX, posY );
-	ctx.lineTo( posX - 10, posY - 14 );
+	ctx.lineTo( posX - 6, posY - 10 );
 	ctx.moveTo( posX, posY );
-	ctx.lineTo( posX + 15, posY - 25 );
+	ctx.lineTo( posX + 10, posY - 20 );
 	ctx.stroke();
 }
