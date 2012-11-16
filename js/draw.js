@@ -101,7 +101,7 @@ var DrawButton = function( button )
 	{		
 		DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, button.focus ? 'red' : 'black', button.background );
 
-		ctx.font			= '10px Arial';
+		ctx.font			= '12px Arial';
 		ctx.textAlign 		= 'center';		
 		ctx.textBaseline 	= 'middle';
 		ctx.fillStyle 		= 'black'

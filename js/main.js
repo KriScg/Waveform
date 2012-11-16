@@ -52,8 +52,8 @@ var gToolButtons = new Array();
 for ( var i = 0; i < 5; ++i )
 {
 	var texts	= [ '1 NODE', '2 NOT', '3 OR', '4 AND', '5 CROSS' ];
-	var btnW 	= 50;
-	var btnH 	= 50;
+	var btnW 	= 60;
+	var btnH 	= 60;
 	var btnX 	= 530;
 	var btnY 	= 20 + i * ( btnH + 3 );
 	gToolButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], background:'#A0E5FF', focus:false, enabled:true } );
@@ -70,7 +70,7 @@ gQuestionButtons.push( { posX:310, posY:320, width:80, height:40, text:'No', bac
 var gMainMenuButtons = new Array();
 for ( var i = 0; i < gLevels.length; ++i )
 { 
-	var btnW 	= 80;
+	var btnW 	= 100;
 	var btnH 	= 50;
 	var offset	= 10;
 	var offsetX = btnW + offset;
@@ -353,7 +353,7 @@ var DrawDesign = function()
 	// inputs and outputs
 	ctx.strokeStyle		= '#FFDD00';
 	ctx.fillStyle		= 'black';
-	ctx.font			= '10px Arial';
+	ctx.font			= '12px Arial';
 	ctx.textAlign 		= 'right';
 	ctx.textBaseline	= 'bottom';
 	ctx.lineWidth		= 2;
@@ -452,8 +452,11 @@ var DrawDesign = function()
 
 var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay )
 {
-	ctx.textAlign = 'right';
-	ctx.fillText( text, posX - 5, posY + height * 0.5 + 4 );
+	ctx.font			= '12px Arial';
+	ctx.textAlign 		= 'right';
+	ctx.textBaseline	= 'middle';
+	ctx.fillText( text, posX - 5, posY + height * 0.5 );
+
 	ctx.strokeStyle = overlay ? '#777777' : 'blue';
 	ctx.lineWidth = 2;
 	ctx.beginPath();	
@@ -497,9 +500,10 @@ var DrawTestBench = function()
 	ctx.stroke();
 	
 	ctx.fillStyle 	= 'black';
-	ctx.font 		= '10px Arial';
+	ctx.font 		= '12px Arial';
 	ctx.textAlign 	= 'left';
-	ctx.fillText( 'Cycle: ' + gSimulator.cycle.toString() + '/20' + ' Corectness: ' + gSimulator.score + '%', posX, posY - 20 );
+	ctx.fillText( 'Cycle: ' + gSimulator.cycle.toString() + '/20', posX, posY - 50 );
+	ctx.fillText( 'Corectness: ' + gSimulator.score + '%', posX, posY - 30 );
 	
 	ctx.strokeStyle = 'gray';
 	ctx.lineWidth = 1;
@@ -551,7 +555,7 @@ var DrawHUD = function()
 		DrawButton( gHUDButtons[ i ] );
 	}
 	
-	ctx.font		= '10px Arial';
+	ctx.font		= '12px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';	
 	ctx.fillText( gLevels[ gCurrLevelID ].name + ' - ' + gGameStateDesc[ gGameState ], 10, 20 );
@@ -559,12 +563,12 @@ var DrawHUD = function()
 
 var DrawDesc = function()
 {	
-	ctx.font 		= '10px Arial';
+	ctx.font 		= '12px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';
 	
 	var x = 420;
-	var y = 460;
+	var y = 420;
 	var maxWidth = 160;
 	var lineHeight = 20;	
 	var words = gLevels[ gCurrLevelID ].desc.split(' ');
@@ -604,7 +608,7 @@ var DrawEndLevelWindow = function()
 	ctx.fill();
 	ctx.stroke();	
 	
-	ctx.font			= '10px Arial';
+	ctx.font			= '12px Arial';
 	ctx.fillStyle		= 'black';
 	ctx.textAlign		= 'center';	
 	ctx.textBaseline	= 'middle';
@@ -630,7 +634,7 @@ var DrawQuestionWindow = function()
 	ctx.fill();
 	ctx.stroke();	
 	
-	ctx.font			= '10px Arial';
+	ctx.font			= '12px Arial';
 	ctx.fillStyle		= 'black';
 	ctx.textAlign		= 'center';	
 	ctx.textBaseline	= 'middle';
@@ -647,7 +651,7 @@ var DrawMainMenu = function()
 {
 	DrawGrid();
 
-	ctx.font			= '10px Arial';
+	ctx.font			= '12px Arial';
 	ctx.fillStyle 		= 'black';
 	ctx.textAlign 		= 'center';	
 	ctx.textBaseline 	= 'middle';
