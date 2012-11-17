@@ -278,10 +278,58 @@ var gLevels = new Array
 			}
 		),
 	},	
-	
+
 	// level 8
 	{
-		name:'.08 Selector',
+		name:'.08 Match',
+		desc:'...',
+		toolboxStateMax:3,
+		nodes:new Array
+		(
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		),
+		output:
+		{
+			name:'Output', 
+			nodeX:6, 
+			nodeY:4,
+			waveform:new Array( 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 )
+		},
+		inputs:new Array
+		(
+			{
+				name:'InputA',
+				nodeX:2,
+				nodeY:4,
+				waveform:new Array( 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 )
+			},
+			{
+				name:'InputB',
+				nodeX:2,
+				nodeY:5,
+				waveform:new Array( 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0 )
+			},
+			{
+				name:'InputC',
+				nodeX:2,
+				nodeY:6,
+				waveform:new Array( 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 )
+			}	
+		),
+	},
+	
+	// level 9
+	{
+		name:'.09 Selector',
 		desc:'...',
 		toolboxStateMax:3,
 		nodes:new Array
@@ -327,9 +375,9 @@ var gLevels = new Array
 		),
 	},
 	
-	// level 9
+	// level 10
 	{
-		name:'.09 State',
+		name:'.10 State',
 		desc:'Now this one is a bit different...',
 		toolboxStateMax:4,
 		nodes:new Array

@@ -1,19 +1,5 @@
 var DrawGate = function( type, nodeX, nodeY )
 {
-	ctx.save();
-	if ( type == GateTypeEnum.NOT )
-	{
-		ctx.translate( GRID_OFF_X + ( nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + nodeY * TILE_H );
-	}
-	else if ( type == GateTypeEnum.CROSS )
-	{
-		
-	}
-	else
-	{
-		ctx.translate( GRID_OFF_X + ( nodeX + 0.5 ) * TILE_W, GRID_OFF_Y + ( nodeY + 0.5 ) * TILE_H );
-	}
-
 	ctx.strokeStyle = 'black';
 	ctx.lineWidth = 2;
 	ctx.beginPath();
@@ -22,84 +8,94 @@ var DrawGate = function( type, nodeX, nodeY )
 	var posY = GRID_OFF_Y + nodeY * TILE_H;
 	switch ( type )
 	{
-		case GateTypeEnum.NOT: 		DrawNOT();	break;
-		case GateTypeEnum.AND: 		DrawAND();	break;
-		case GateTypeEnum.OR: 		DrawOR(); 	break;
-		case GateTypeEnum.CROSS: 	DrawCross( posX, posY ); break;
+		case GateTypeEnum.NOT:		DrawNOT( posX, posY ); break;
+		case GateTypeEnum.AND:		DrawAND( posX, posY );	break;
+		case GateTypeEnum.OR:		DrawOR( posX, posY ); 	break;
+		case GateTypeEnum.CROSS:	DrawCross( posX, posY ); break;
 	}
 
 	ctx.stroke();
-	ctx.restore();
 }
 
-var DrawGateInputs = function()
+var DrawGateInputs = function( posX, posY )
 {
 	var size = 10;
-	ctx.moveTo( -size, -size * 0.5 );
-	ctx.lineTo( -0.5 * TILE_W, -size * 0.5 );
-	ctx.lineTo( -0.5 * TILE_W, -size * 2 );
-	ctx.moveTo( -size, size * 0.5 );
-	ctx.lineTo( -0.5 * TILE_W, size * 0.5 );
-	ctx.lineTo( -0.5 * TILE_W, size * 2 );
+	ctx.moveTo( posX - size, posY - size * 0.5 );
+	ctx.lineTo( posX - 0.5 * TILE_W, posY - size * 0.5 );
+	ctx.lineTo( posX - 0.5 * TILE_W, posY - size * 2 );
+	ctx.moveTo( posX - size, posY + size * 0.5 );
+	ctx.lineTo( posX - 0.5 * TILE_W, posY + size * 0.5 );
+	ctx.lineTo( posX - 0.5 * TILE_W, posY + size * 2 );
 }
 
-var DrawGateOutputs = function()
+var DrawGateOutputs = function( posX, posY )
 {
 	var size = 10;
-	ctx.moveTo( size, 0 );
-	ctx.lineTo( 0.5 * TILE_W, 0 );
-	ctx.lineTo( 0.5 * TILE_W, -size * 2 );
-	ctx.moveTo( 0.5 * TILE_W, 0 );
-	ctx.lineTo( 0.5 * TILE_W, size * 2 );
+	ctx.moveTo( posX + size, posY );
+	ctx.lineTo( posX + 0.5 * TILE_W, posY );
+	ctx.lineTo( posX + 0.5 * TILE_W, posY - size * 2 );
+	ctx.moveTo( posX + 0.5 * TILE_W, posY );
+	ctx.lineTo( posX + 0.5 * TILE_W, posY + size * 2 );
 }
 
-var DrawAND = function()
+var DrawAND = function( posX, posY )
 {
+	posX += TILE_W * 0.5;
+	posY += TILE_H * 0.5;
+
 	var size = 10;
-	ctx.arc( 1, 0, size, 1.5 * Math.PI, 0.5 * Math.PI, false );
-	ctx.moveTo( 1, -size );
-	ctx.lineTo( -size, -size );
-	ctx.lineTo( -size, size );
-	ctx.lineTo( 1, size );
+	ctx.arc( posX + 1, posY, size, 1.5 * Math.PI, 0.5 * Math.PI, false );
+	ctx.moveTo( posX + 1, posY - size );
+	ctx.lineTo( posX - size, posY - size );
+	ctx.lineTo( posX - size, posY + size );
+	ctx.lineTo( posX + 1, posY + size );
 
-	DrawGateInputs();
-	DrawGateOutputs();	
+	DrawGateInputs( posX, posY );
+	DrawGateOutputs( posX, posY );
 }
 
-var DrawNOT = function()
+var DrawNOT = function( posX, posY )
 {
-	var size = 8;
-	ctx.moveTo( -0.5 * TILE_H, 0 );
-	ctx.lineTo( -size, 0 );
-	ctx.moveTo( size, 0 );
-	ctx.lineTo( +0.5 * TILE_H, 0 );
-	ctx.moveTo( size, 0 );
-	ctx.lineTo( 1 - size, -size - 1 );
-	ctx.lineTo( 1 - size, size + 1 );
-	ctx.lineTo( size, 0 );
+	var offX0 	= TILE_W * 0.35;
+	var offX1 	= TILE_W * ( 1 - 0.4 );
+	var offY 	= TILE_H * 0.20;
+
+	ctx.moveTo( posX, posY );
+	ctx.lineTo( posX + offX0, posY );
+	ctx.lineTo( posX + offX0, posY + offY );
+	ctx.lineTo( posX + offX1, posY );
+	ctx.lineTo( posX + offX0, posY - offY );
+	ctx.lineTo( posX + offX0, posY );
+	ctx.moveTo( posX + offX1, posY );
+	ctx.lineTo( posX + TILE_W, posY );
+	ctx.arc( posX + offX1 + 2, posY, 2, 0, 2 * Math.PI, false );
 }
 
-var DrawOR = function()
+var DrawOR = function( posX, posY )
 {
+	posX += TILE_W * 0.5;
+	posY += TILE_H * 0.5;
 	var size = 10;
-	//ctx.arc( 1, 0, size, 1.5 * Math.PI, 0 * Math.PI, false );	
-	ctx.moveTo( 1, -size );
-	ctx.lineTo( -size - 3, -size );
-	ctx.quadraticCurveTo( -2, 0, -size - 3, size )
-	ctx.lineTo( 1, size );
-	ctx.quadraticCurveTo( 0.75 * size, 0.75 * size, size, 0 )
-	ctx.quadraticCurveTo( 0.75 * size, -0.75 * size, 1, -size )
 	
-	DrawGateInputs();
-	DrawGateOutputs();	
+	ctx.moveTo( posX + 1, posY - size );
+	ctx.lineTo( posX - size - 3, posY - size );
+	ctx.quadraticCurveTo( posX - 2, posY, posX - size - 3, posY + size )
+	ctx.lineTo( posX + 1, posY + size );
+	ctx.quadraticCurveTo( posX + 0.75 * size, posY + 0.75 * size, posX + size, posY + 0 )
+	ctx.quadraticCurveTo( posX + 0.75 * size, posY - 0.75 * size, posX + 1, posY - size )
+	
+	DrawGateInputs( posX, posY );
+	DrawGateOutputs( posX, posY );
 }
 
 var DrawCross = function( posX, posY )
 {
 	ctx.moveTo( posX, posY );
 	ctx.lineTo( posX + TILE_W, posY + TILE_H );
-	ctx.moveTo( posX + TILE_W, posY );
-	ctx.lineTo( posX, posY + TILE_H );
+
+	ctx.moveTo( posX, posY + TILE_H );
+	ctx.arc( posX + TILE_W * 0.5, posY + TILE_H * 0.5, TILE_W * 0.15, 0.75 * Math.PI, 1.75 * Math.PI );
+	ctx.lineTo( posX + TILE_W, posY );
 }
 
 var DrawButton = function( button )
@@ -165,11 +161,11 @@ var DrawDoneIcon = function( posX, posY )
 	ctx.strokeStyle = 'black';
 	ctx.fillStyle 	= 'black';
 	ctx.lineCap 	= 'round';	
-	ctx.lineWidth	= 4;
+	ctx.lineWidth	= 3;
 	ctx.beginPath();
 	ctx.moveTo( posX, posY );
-	ctx.lineTo( posX - 6, posY - 10 );
+	ctx.lineTo( posX - 5, posY - 8 );
 	ctx.moveTo( posX, posY );
-	ctx.lineTo( posX + 10, posY - 20 );
+	ctx.lineTo( posX + 8, posY - 15 );
 	ctx.stroke();
 }
