@@ -19,8 +19,9 @@ var gInputsArray 		= new Array();
 var gOutput;
 var gSimulator			= { cycle:0, subCycle:0, score:0, waveform:new Array() };
 var gCurrLevelID		= 0;
-var gUnlockedLevelID 	= 5;
+var gUnlockedLevelID 	= 10;
 var gStateToColor 		= new Array( '#0000FF', '#FF0000', '#FF00FF' );
+var gNodeBRect			= { minX:0, minY:0, maxX:0, maxY:0 };
 
 var GameStateEnum =
 {
@@ -40,14 +41,16 @@ var gHUDButtons	= new Array();
 for ( var i = 0; i < 4; ++i )
 {
 	var texts	= [ 'VERIFY', 'STEP', 'STOP', 'MENU' ];
-	var btnW 	= 60;
+	var btnW 	= 75;
 	var btnH 	= 30;
-	var btnX 	= 195 + i * ( btnW + 3 );
+	var btnX 	= 150 + i * ( btnW + 3 );
 	var btnY 	= 380;
-	gHUDButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], background:'#A0E5FF', focus:false, enabled:true } );	
+	gHUDButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], textOffX:25, background:'#A0E5FF', focus:false, enabled:true } );	
 }
-gHUDButtons[ 3 ].posX = 530;
-gHUDButtons[ 3 ].posY = 560;
+gHUDButtons[ 3 ].textOffX	= null;
+gHUDButtons[ 3 ].width		= 60;
+gHUDButtons[ 3 ].posX		= 530;
+gHUDButtons[ 3 ].posY		= 560;
 
 var gToolButtons = new Array();
 for ( var i = 0; i < 5; ++i )
@@ -76,7 +79,7 @@ for ( var i = 0; i < gLevels.length; ++i )
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
-	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, background:'#A0E5FF', focus:false, enabled:true } );
+	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:20, background:'#A0E5FF', focus:false, enabled:true } );
 }
 
 var SimulateReset = function()
@@ -109,7 +112,7 @@ var SelectTool = function( toolID )
 	gToolboxState = toolID;
 }
 
-var InitLevel = function( levelID )
+var LoadLevel = function( levelID )
 {
 	gCurrLevelID = levelID;
 	var level = gLevels[ levelID ];
@@ -124,8 +127,9 @@ var InitLevel = function( levelID )
 	for ( var i = 0; i < len; ++i )
 	{
 		gToolButtons[ i ].enabled = gToolboxStateMax >= i;
-	}	
+	}
 
+	gNodeBRect = { minX:NODE_NUM_X, minY:NODE_NUM_Y, maxX:0, maxY:0 };
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
 		for ( var x = 0; x < NODE_NUM_X; ++x )
@@ -133,6 +137,14 @@ var InitLevel = function( levelID )
 			var i = x + y * NODE_NUM_X;
 			var enabledNode = level.nodes[ i ] != 0;
 			gNodeArray[ i ] = { enabled:enabledNode, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0, constState:-1 };
+			
+			if ( enabledNode )
+			{
+				gNodeBRect.minX = Math.min( gNodeBRect.minX, x );
+				gNodeBRect.minY = Math.min( gNodeBRect.minY, y );
+				gNodeBRect.maxX = Math.max( gNodeBRect.maxX, x );
+				gNodeBRect.maxY = Math.max( gNodeBRect.maxY, y );
+			}
 		}
 	}
 
@@ -140,7 +152,7 @@ var InitLevel = function( levelID )
 	SelectTool( 0 );
 }
 
-InitLevel( 0 );
+LoadLevel( 0 );
 
 var gVerifyLoop;
 var Verify = function()
@@ -351,6 +363,7 @@ var Clear = function()
 var DrawDesign = function()
 {
 	DrawGrid();
+	DrawRoundedRect( GRID_OFF_X + ( gNodeBRect.minX - 0.5 ) * TILE_W, GRID_OFF_Y + ( gNodeBRect.minY - 0.5 ) * TILE_H, ( gNodeBRect.maxX - gNodeBRect.minX + 1 ) * TILE_W, ( gNodeBRect.maxY - gNodeBRect.minY + 1 ) * TILE_H, 10, 2, 'black', '#89C1B1' );
 
 	// inputs and outputs
 	ctx.strokeStyle		= '#FFDD00';
@@ -365,7 +378,7 @@ var DrawDesign = function()
 	{
 		var input = gInputsArray[ i ];
 		ctx.fillStyle = 'black';
-		ctx.fillText( input.name, GRID_OFF_X - 33 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
+		ctx.fillText( input.name, GRID_OFF_X - 38 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		
 		ctx.fillStyle = '#FFDD00';
 		if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
@@ -375,7 +388,7 @@ var DrawDesign = function()
 		}
 		
 		ctx.beginPath();
-		ctx.moveTo( GRID_OFF_X - 30 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
+		ctx.moveTo( GRID_OFF_X - 35 + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		ctx.lineTo( GRID_OFF_X + input.nodeX * TILE_W, GRID_OFF_Y + input.nodeY * TILE_H );
 		ctx.stroke();
 
@@ -390,7 +403,7 @@ var DrawDesign = function()
 	ctx.fillStyle		= 'black';
 	ctx.textAlign 		= 'left';
 	ctx.textBaseline	= 'middle';
-	ctx.fillText( gOutput.name, GRID_OFF_X + 32 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.fillText( gOutput.name, GRID_OFF_X + 37 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 
 	ctx.fillStyle = '#FFDD00';
 	if ( gGameState == GameStateEnum.DEBUG || gGameState == GameStateEnum.VERIFY )
@@ -399,14 +412,14 @@ var DrawDesign = function()
 		ctx.fillStyle	= gStateToColor[ gNodeArray[ gOutput.nodeX + gOutput.nodeY * NODE_NUM_X ].state ];
 	}		
 	ctx.beginPath();
-	ctx.moveTo( GRID_OFF_X + 30 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.moveTo( GRID_OFF_X + 35 + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W, GRID_OFF_Y + gOutput.nodeY * TILE_H );
 	ctx.stroke();	
 	
 	ctx.beginPath();
-	ctx.moveTo( GRID_OFF_X + gOutput.nodeX * TILE_W + 31, GRID_OFF_Y + gOutput.nodeY * TILE_H );
-	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W - 6 + 31, GRID_OFF_Y + gOutput.nodeY * TILE_H - 6 );
-	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W - 6 + 31, GRID_OFF_Y + gOutput.nodeY * TILE_H + 6 );
+	ctx.moveTo( GRID_OFF_X + gOutput.nodeX * TILE_W + 36, GRID_OFF_Y + gOutput.nodeY * TILE_H );
+	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W - 6 + 36, GRID_OFF_Y + gOutput.nodeY * TILE_H - 6 );
+	ctx.lineTo( GRID_OFF_X + gOutput.nodeX * TILE_W - 6 + 36, GRID_OFF_Y + gOutput.nodeY * TILE_H + 6 );
 	ctx.closePath();
 	ctx.fill();	
 	
@@ -526,8 +539,7 @@ var DrawTestBench = function()
 	ctx.fillStyle 	= 'black';
 	ctx.font 		= '12px Arial';
 	ctx.textAlign 	= 'left';
-	ctx.fillText( 'Cycle: ' + gSimulator.cycle.toString() + '/20', posX, posY - 50 );
-	ctx.fillText( 'Corectness: ' + gSimulator.score + '%', posX, posY - 30 );
+	ctx.fillText( 'Cycle: ' + gSimulator.cycle.toString() + '/20' + ' Corectness: ' + gSimulator.score + '%', posX, posY - 25 );
 	
 	ctx.strokeStyle = 'gray';
 	ctx.lineWidth = 1;
@@ -577,6 +589,13 @@ var DrawHUD = function()
 	for ( var i = 0; i < len; ++i )
 	{
 		DrawButton( gHUDButtons[ i ] );
+		
+		switch ( i )
+		{
+			case 0: DrawRunIcon( gHUDButtons[ i ].posX + 7, gHUDButtons[ i ].posY + 8 ); break;
+			case 1: DrawStepIcon( gHUDButtons[ i ].posX + 7, gHUDButtons[ i ].posY + 8 ); break;			
+			case 2: DrawStopIcon( gHUDButtons[ i ].posX + 7, gHUDButtons[ i ].posY + 8 ); break;
+		}
 	}
 	
 	ctx.font		= '12px Arial';
@@ -682,7 +701,7 @@ var DrawMainMenu = function()
 	ctx.textBaseline 	= 'middle';
 	ctx.fillText( 'WAVEFORM', WIDTH * 0.5, 100 );
 	ctx.fillText( 'Select level', WIDTH * 0.5, 130 );
-	ctx.fillText( 'Progress: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 150 );
+	ctx.fillText( 'Completed: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 150 );
 	
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )
@@ -793,16 +812,21 @@ document.onkeydown = function( e )
 	{
 		SelectTool( e.keyCode - 49 )
 	}
-	else if ( e.keyCode == 98 && gCurrLevelID + 1 < gLevels.length )
+	else if ( e.keyCode >= 97 && e.keyCode <= 105 )
 	{
-		// tempshit debug
-		InitLevel( gCurrLevelID + 1 );
+		SelectTool( e.keyCode - 97 )
 	}
-	else if ( e.keyCode == 97 && gCurrLevelID > 0 )
+	else if ( e.keyCode == 87 && gCurrLevelID + 1 < gLevels.length )
 	{
 		// tempshit debug
-		InitLevel( gCurrLevelID - 1 );
+		LoadLevel( gCurrLevelID + 1 );
+	}
+	else if ( e.keyCode == 81 && gCurrLevelID > 0 )
+	{
+		// tempshit debug
+		LoadLevel( gCurrLevelID - 1 );
 	}	
+	
 	
 	DrawGame();
 }
@@ -903,13 +927,13 @@ c.onmousedown = function( e )
 					switch ( i )
 					{
 						case 0:
-							InitLevel( gCurrLevelID );
+							LoadLevel( gCurrLevelID );
 							break;
 
 						case 1:
 							if ( gCurrLevelID + 1 < gLevels.length )
 							{
-								InitLevel( gCurrLevelID + 1 );
+								LoadLevel( gCurrLevelID + 1 );
 							}
 							else
 							{
@@ -947,7 +971,7 @@ c.onmousedown = function( e )
 			{
 				if ( OnButtonMouseDown( gMainMenuButtons[ i ], mousePosX, mousePosY ) && i <= gUnlockedLevelID )
 				{
-					InitLevel( i );
+					LoadLevel( i );
 					break;
 				}
 			}

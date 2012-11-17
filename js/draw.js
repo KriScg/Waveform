@@ -17,13 +17,13 @@ var DrawGate = function( type, nodeX, nodeY )
 	ctx.stroke();
 }
 
-var DrawGateInputs = function( posX, posY )
+var DrawGateInputs = function( posX, posY, offX )
 {
 	var size = 10;
-	ctx.moveTo( posX - size, posY - size * 0.5 );
+	ctx.moveTo( posX - size + offX, posY - size * 0.5 );
 	ctx.lineTo( posX - 0.5 * TILE_W, posY - size * 0.5 );
 	ctx.lineTo( posX - 0.5 * TILE_W, posY - size * 2 );
-	ctx.moveTo( posX - size, posY + size * 0.5 );
+	ctx.moveTo( posX - size + offX, posY + size * 0.5 );
 	ctx.lineTo( posX - 0.5 * TILE_W, posY + size * 0.5 );
 	ctx.lineTo( posX - 0.5 * TILE_W, posY + size * 2 );
 }
@@ -31,7 +31,7 @@ var DrawGateInputs = function( posX, posY )
 var DrawGateOutputs = function( posX, posY )
 {
 	var size = 10;
-	ctx.moveTo( posX + size, posY );
+	ctx.moveTo( posX + size + 2, posY );
 	ctx.lineTo( posX + 0.5 * TILE_W, posY );
 	ctx.lineTo( posX + 0.5 * TILE_W, posY - size * 2 );
 	ctx.moveTo( posX + 0.5 * TILE_W, posY );
@@ -50,7 +50,7 @@ var DrawAND = function( posX, posY )
 	ctx.lineTo( posX - size, posY + size );
 	ctx.lineTo( posX + 1, posY + size );
 
-	DrawGateInputs( posX, posY );
+	DrawGateInputs( posX, posY, 0 );
 	DrawGateOutputs( posX, posY );
 }
 
@@ -78,13 +78,13 @@ var DrawOR = function( posX, posY )
 	var size = 10;
 	
 	ctx.moveTo( posX + 1, posY - size );
-	ctx.lineTo( posX - size - 3, posY - size );
-	ctx.quadraticCurveTo( posX - 2, posY, posX - size - 3, posY + size )
+	ctx.lineTo( posX - size, posY - size );
+	ctx.quadraticCurveTo( posX, posY, posX - size, posY + size )
 	ctx.lineTo( posX + 1, posY + size );
-	ctx.quadraticCurveTo( posX + 0.75 * size, posY + 0.75 * size, posX + size, posY + 0 )
+	ctx.quadraticCurveTo( posX + 0.75 * size, posY + 0.75 * size, posX + size + 2, posY )
 	ctx.quadraticCurveTo( posX + 0.75 * size, posY - 0.75 * size, posX + 1, posY - size )
 	
-	DrawGateInputs( posX, posY );
+	DrawGateInputs( posX, posY, 4 );
 	DrawGateOutputs( posX, posY );
 }
 
@@ -101,14 +101,14 @@ var DrawCross = function( posX, posY )
 var DrawButton = function( button )
 {
 	if ( button.enabled )
-	{
+	{	
 		DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, button.focus ? 'red' : 'black', button.background );
-
+		
 		ctx.font			= '12px Arial';
-		ctx.textAlign 		= 'center';
+		ctx.textAlign 		= button.textOffX ? 'left' : 'center';
 		ctx.textBaseline 	= 'middle';
 		ctx.fillStyle 		= 'black'
-		ctx.fillText( button.text, button.posX + button.width * 0.5, button.posY + button.height * 0.5 );
+		ctx.fillText( button.text, button.posX + ( button.textOffX ? button.textOffX : button.width * 0.5 ), button.posY + button.height * 0.5 );		
 	}
 }
 
@@ -158,8 +158,8 @@ var DrawGrid = function()
 
 var DrawDoneIcon = function( posX, posY )
 {
-	ctx.strokeStyle = 'black';
-	ctx.fillStyle 	= 'black';
+	ctx.strokeStyle = '515151';
+	ctx.fillStyle 	= '515151';
 	ctx.lineCap 	= 'round';	
 	ctx.lineWidth	= 3;
 	ctx.beginPath();
@@ -168,4 +168,41 @@ var DrawDoneIcon = function( posX, posY )
 	ctx.moveTo( posX, posY );
 	ctx.lineTo( posX + 8, posY - 15 );
 	ctx.stroke();
+}
+
+var DrawStopIcon = function( posX, posY )
+{
+	ctx.strokeStyle = '515151';
+	ctx.fillStyle 	= '515151';
+	ctx.beginPath();
+	ctx.rect( posX, posY, 14, 14 );
+	ctx.fill();
+}
+
+var DrawStepIcon = function( posX, posY )
+{
+	ctx.strokeStyle = '515151';
+	ctx.fillStyle 	= '515151';
+	ctx.beginPath();
+	ctx.moveTo( posX, posY );
+	ctx.lineTo( posX + 10, posY + 7 );
+	ctx.lineTo( posX, posY + 14 );
+	ctx.rect( posX + 8, posY, 4, 14 );
+	ctx.fill();
+}
+
+var DrawRunIcon = function( posX, posY )
+{
+	posY += 2;
+
+	ctx.strokeStyle = '515151';
+	ctx.fillStyle 	= '515151';
+	ctx.beginPath();
+	ctx.moveTo( posX, posY );
+	ctx.lineTo( posX + 7, posY + 5 );
+	ctx.lineTo( posX, posY + 10 );
+	ctx.moveTo( posX + 7, posY );
+	ctx.lineTo( posX + 7 + 7, posY + 5 );
+	ctx.lineTo( posX + 7, posY + 10 );	
+	ctx.fill();
 }
