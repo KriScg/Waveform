@@ -103,7 +103,7 @@ var DrawButton = function( button )
 	if ( button.enabled )
 	{	
 		DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, button.focus ? 'red' : 'black', button.background );
-		
+
 		ctx.font			= '12px Arial';
 		ctx.textAlign 		= button.textOffX ? 'left' : 'center';
 		ctx.textBaseline 	= 'middle';
