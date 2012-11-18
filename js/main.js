@@ -19,7 +19,7 @@ var gInputsArray 		= new Array();
 var gOutput;
 var gSimulator			= { cycle:0, subCycle:0, score:0, waveform:new Array() };
 var gCurrLevelID		= 0;
-var gUnlockedLevelID 	= 10;
+var gUnlockedLevelID 	= 0;
 var gStateToColor 		= new Array( '#0000FF', '#FF0000', '#FF00FF' );
 var gNodeBRect			= { minX:0, minY:0, maxX:0, maxY:0 };
 
@@ -33,7 +33,7 @@ var GameStateEnum =
 	MAIN_MENU	: 5
 }
 var gGameStateDesc		= new Array( 'Designing', 'Debugging', 'Verifying', 'Completed', 'Designing', 'Menu' )
-var gGameState			= GameStateEnum.DEBUG;
+var gGameState			= GameStateEnum.MAIN_MENU;
 var gToolboxState		= 0;
 var gToolboxStateMax	= 0;
 
@@ -152,8 +152,6 @@ var LoadLevel = function( levelID )
 	SelectTool( 0 );
 }
 
-LoadLevel( 0 );
-
 var gVerifyLoop;
 var Verify = function()
 {
@@ -171,6 +169,7 @@ var Verify = function()
 			{
 				gUnlockedLevelID = Math.max( gUnlockedLevelID, gCurrLevelID + 1 );
 				gGameState = GameStateEnum.END_LEVEL;
+				//localStorage.setItem( 'UnlockedLevelID', gUnlockedLevelID.toString() );
 			}
 		}
 		
@@ -365,6 +364,24 @@ var DrawDesign = function()
 	DrawGrid();
 	DrawRoundedRect( GRID_OFF_X + ( gNodeBRect.minX - 0.5 ) * TILE_W, GRID_OFF_Y + ( gNodeBRect.minY - 0.5 ) * TILE_H, ( gNodeBRect.maxX - gNodeBRect.minX + 1 ) * TILE_W, ( gNodeBRect.maxY - gNodeBRect.minY + 1 ) * TILE_H, 10, 2, 'black', '#89C1B1' );
 
+	ctx.beginPath();
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = '#75A596'
+	for ( var y = gNodeBRect.minY; y < gNodeBRect.maxY + 1; ++y )
+	{
+		for ( var x = gNodeBRect.minX; x < gNodeBRect.maxX + 1; ++x )
+		{
+			var size = 8;
+		
+			ctx.moveTo( GRID_OFF_X + x * TILE_W + 0.5, GRID_OFF_Y + y * TILE_H - size + 0.5 );
+			ctx.lineTo( GRID_OFF_X + x * TILE_W + 0.5, GRID_OFF_Y + y * TILE_H + size + 0.5 );
+			
+			ctx.moveTo( GRID_OFF_X + x * TILE_W - size + 0.5, GRID_OFF_Y + y * TILE_H + 0.5 );
+			ctx.lineTo( GRID_OFF_X + x * TILE_W + size + 0.5, GRID_OFF_Y + y * TILE_H + 0.5 );			
+		}
+	}
+	ctx.stroke();
+	
 	// inputs and outputs
 	ctx.strokeStyle		= '#FFDD00';
 	ctx.fillStyle		= 'black';
@@ -981,6 +998,17 @@ c.onmousedown = function( e )
 	DrawGame();
 }
 
+var InitGame = function()
+{
+	var value = localStorage.getItem( 'UnlockedLevelID' );
+	if ( value )
+	{
+		gUnlockedLevelID = parseInt( value );
+	}
+	LoadLevel( 0 );
+	//gGameState = GameStateEnum.MAIN_MENU;
+}
+
 var DrawGame = function()
 {
 	Clear();
@@ -1009,4 +1037,5 @@ var DrawGame = function()
 	}
 }
 
+InitGame();
 DrawGame();
