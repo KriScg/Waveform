@@ -55,7 +55,7 @@ gHUDButtons[ 3 ].posY		= 560;
 var gToolButtons = [];
 for ( var i = 0; i < 5; ++i )
 {
-	var texts	= [ '1 NODE', '2 NOT', '3 OR', '4 AND', '5 CROSS' ];
+	var texts	= [ '1 PATH', '2 NOT', '3 OR', '4 AND', '5 CROSS' ];
 	var btnW 	= 60;
 	var btnH 	= 60;
 	var btnX 	= 530;
@@ -105,7 +105,6 @@ var SimulateReset = function()
 		gNodeArray[ i ].connDownState 	= 0;
 		gNodeArray[ i ].connRightState 	= 0;
 		gNodeArray[ i ].state			= 0;
-		gNodeArray[ i ].constState		= -1;
 	}
 }
 
@@ -144,7 +143,7 @@ var LoadLevel = function( levelID )
 		{
 			var i = x + y * NODE_NUM_X;
 			var enabledNode = level.nodes[ i ] != 0;
-			gNodeArray[ i ] = { enabled:enabledNode, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0, constState:-1 };
+			gNodeArray[ i ] = { enabled:enabledNode, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
 			
 			if ( enabledNode )
 			{
@@ -190,7 +189,7 @@ var SimulateCycle = function()
 	for ( var i = 0; i < SUBCYCLE_NUM; ++i )
 	{
 		gSimulator.subCycle = i;
-		SimulateSubCycle()
+		SimulateSubCycle();
 	}
 
 	// update outputs
@@ -285,8 +284,7 @@ var SimulateSubCycle = function()
 			if ( !pin.simWaveform )
 			{
 				var inputNodeID = pin.nodeX + pin.nodeY * NODE_NUM_X;
-				gNodeArray[ inputNodeID ].state 		= pin.waveform[ gSimulator.cycle ];
-				gNodeArray[ inputNodeID ].constState 	= pin.waveform[ gSimulator.cycle ];
+				gNodeArray[ inputNodeID ].state = pin.waveform[ gSimulator.cycle ];
 				gDirtyNodeArray.push( { currID:inputNodeID, prevID:-1 } );
 			}
 		}
@@ -301,9 +299,21 @@ var SimulateSubCycle = function()
 		}
 	}
 
-	// verify gate conditions
+	// verify gate and input conditions
 	if ( gSimulator.subCycle == SUBCYCLE_STABLE_NUM )
 	{
+		var pinArrLen = gPins.length;
+		for ( var iPin = 0; iPin < pinArrLen; ++iPin )
+		{
+			var pin = gPins[ iPin ];
+			var inputNodeID = pin.nodeX + pin.nodeY * NODE_NUM_X;
+			if ( !pin.simWaveform && gNodeArray[ inputNodeID ].state != pin.waveform[ gSimulator.cycle ] )
+			{
+				gNodeArray[ inputNodeID ].state = 2;
+				gDirtyNodeArray.push( { currID:inputNodeID, prevID:-1 } );
+			}
+		}
+
 		var gateArrLen = gGateArray.length;
 		for ( var j = 0; j < gateArrLen; ++j )
 		{
@@ -325,7 +335,7 @@ var SimulateSubCycle = function()
 		{
 			gNodeArray[ nodeID ].state = 2;
 			prevNodeID = -1;
-		}		
+		}
 
 		// right
 		if ( gNodeArray[ nodeID ].connRight && prevNodeID != nodeID + 1 )
