@@ -1,6 +1,7 @@
 @font-face {
-    font-family: 'Orbitron';
+    font-family: 'orbitron-bold-webfont';
     src: url('../font/orbitron-bold-webfont.ttf') format('truetype');
+	/*src: local('orbitron-bold-webfont'), url('orbitron-bold-webfont.woff') format('woff'), url('orbitron-bold-webfont.ttf') format('truetype'), url('orbitron-bold-webfont.svg#webfontNgZtDOtM') format('svg');*/
 }
 
 html {

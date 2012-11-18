@@ -79,7 +79,7 @@ for ( var i = 0; i < gLevels.length; ++i )
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
-	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:170 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:20, background:'#A0E5FF', focus:false, enabled:true } );
+	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:180 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:20, background:'#A0E5FF', focus:false, enabled:true } );
 }
 
 var SimulateReset = function()
@@ -427,24 +427,7 @@ var DrawDesign = function()
 {
 	DrawGrid();
 	DrawRoundedRect( GRID_OFF_X + ( gNodeBRect.minX - 0.5 ) * TILE_W, GRID_OFF_Y + ( gNodeBRect.minY - 0.5 ) * TILE_H, ( gNodeBRect.maxX - gNodeBRect.minX + 1 ) * TILE_W, ( gNodeBRect.maxY - gNodeBRect.minY + 1 ) * TILE_H, 10, 2, 'black', '#89C1B1' );
-
-	ctx.beginPath();
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = '#75A596'
-	for ( var y = gNodeBRect.minY; y < gNodeBRect.maxY + 1; ++y )
-	{
-		for ( var x = gNodeBRect.minX; x < gNodeBRect.maxX + 1; ++x )
-		{
-			var size = 8;
-		
-			ctx.moveTo( GRID_OFF_X + x * TILE_W + 0.5, GRID_OFF_Y + y * TILE_H - size + 0.5 );
-			ctx.lineTo( GRID_OFF_X + x * TILE_W + 0.5, GRID_OFF_Y + y * TILE_H + size + 0.5 );
-			
-			ctx.moveTo( GRID_OFF_X + x * TILE_W - size + 0.5, GRID_OFF_Y + y * TILE_H + 0.5 );
-			ctx.lineTo( GRID_OFF_X + x * TILE_W + size + 0.5, GRID_OFF_Y + y * TILE_H + 0.5 );			
-		}
-	}
-	ctx.stroke();
+	DrawCrossGrid( GRID_OFF_X, GRID_OFF_Y, gNodeBRect.minX, gNodeBRect.minY, gNodeBRect.maxX, gNodeBRect.maxY );
 	
 	var pinArrLen = gPins.length;
 	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
@@ -574,25 +557,24 @@ var DrawTestBench = function()
 	for ( var i = 0; i < CYCLE_NUM + 1; ++i )
 	{
 		ctx.moveTo( posX + i * width + 0.5, posY + 0.5 - 10 );
-		ctx.lineTo( posX + i * width + 0.5, posY + height * 2 * ( 3 + 1 ) + 0.5 - 5 );
+		ctx.lineTo( posX + i * width + 0.5, posY + height * 2 * gPins.length + 0.5 - 5 );
 	}
 
-	for ( var i = 1; i < gPins.length + 1; ++i )
+	for ( var i = 1; i < gPins.length; ++i )
 	{
 		ctx.moveTo( posX - 50, posY + 0.5 - 2 + i * height * 2 - height * 0.5 );
 		ctx.lineTo( posX + 20 * width + 0.5, posY + 0.5 - 2 + i * height * 2 - height * 0.5 );
 	}
 	ctx.stroke();
 	
-	var arrLen = gPins.length;
-	for ( var i = 0; i < arrLen; ++i )
+	var pinArrLen = gPins.length;
+	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
 	{
-		var pin = gPins[ i ];
+		var pin = gPins[ iPin ];
 		if ( pin.simWaveform )
 		{
 			DrawWaveform( posX, posY, width, height, pin.name, pin.waveform, true );
-			DrawWaveform( posX, posY, width, height, pin.name, pin.simWaveform );		
-			
+			DrawWaveform( posX, posY, width, height, pin.name, pin.simWaveform );
 		}
 		else
 		{
@@ -639,9 +621,9 @@ var DrawDesc = function()
 	ctx.textAlign 		= 'left';
 	ctx.textBaseline 	= 'middle';
 	
-	var x = 420;
-	var y = 420;
-	var maxWidth = 160;
+	var x = 405;
+	var y = 400;
+	var maxWidth = 190;
 	var lineHeight = 20;	
 	var words = gLevels[ gCurrLevelID ].desc.split(' ');
 	var line = '';
@@ -722,14 +704,18 @@ var DrawQuestionWindow = function()
 var DrawMainMenu = function()
 {
 	DrawGrid();
-
-	ctx.font			= '12px Arial';
+	DrawRoundedRect( 100, 125, 410, 360, 5, 2, 'black', '#89C1B1' );
+	
+	//ctx.font			= '60px orbitron-bold-webfont';
+	ctx.font			= 'bold 60px Arial';
 	ctx.fillStyle 		= 'black';
 	ctx.textAlign 		= 'center';	
 	ctx.textBaseline 	= 'middle';
-	ctx.fillText( 'WAVEFORM', WIDTH * 0.5, 100 );
-	ctx.fillText( 'Select level', WIDTH * 0.5, 130 );
-	ctx.fillText( 'Completed: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 150 );
+	ctx.fillText( 'WAVEFORM', WIDTH * 0.5, 90 );
+	
+	ctx.font = '12px Arial';
+	ctx.fillText( 'Select level', WIDTH * 0.5, 140 );
+	ctx.fillText( 'Completed: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 160 );
 	
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )
@@ -1017,7 +1003,7 @@ var InitGame = function()
 		gUnlockedLevelID = parseInt( value );
 	}
 	LoadLevel( 0 );
-	//gGameState = GameStateEnum.MAIN_MENU;
+	gGameState = GameStateEnum.MAIN_MENU;
 }
 
 var DrawGame = function()

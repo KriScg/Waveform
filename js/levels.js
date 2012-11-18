@@ -10,7 +10,7 @@ var gLevels =
 [
 	{
 		name:'Routing',
-		desc:'Route clock signal from input to output. Click between the nodes in order to connect them. After connecting nodes use verify button.',
+		desc:'Route clock signal from input to output. Click between adjacent nodes in order to connect them horizontally or vertically. After connecting nodes use verify button. Reference output waveform needs to match simulated waveform.',
 		toolboxStateMax:0,
 		nodes:
 		[
@@ -44,7 +44,7 @@ var gLevels =
 	},
 	{
 		name:'Inverted',
-		desc:'Use NOT gate to invert input and route it to output.',
+		desc:'Use NOT gate to invert input and route it to output. Select NOT gate by pressing "2" or selecting it with mouse and place it horizontally between two adjacent nodes. Use the step button in order to debug the design.',
 		toolboxStateMax:1,
 		nodes:
 		[
@@ -78,7 +78,7 @@ var gLevels =
 	},
 	{
 		name:'Continuous',
-		desc:'Generate continuous signal using NOT gates.',
+		desc:'...',
 		toolboxStateMax:1,
 		nodes:
 		[
@@ -180,7 +180,7 @@ var gLevels =
 	},	
 	{
 		name:'Maximum',
-		desc:'Try to analyze input and output signals and find the pattern. Remember to use new available gate type - OR. It produces HI if any of it\'s inputs are HI',
+		desc:'Try to analyze input and output signals and find the pattern. Remember to use new available gate type - OR. It produces HI if any of it\'s inputs are HI.',
 		toolboxStateMax:2,
 		nodes:
 		[
@@ -392,7 +392,7 @@ var gLevels =
 	},
 	{
 		name:'Crossing',
-		desc:'...',
+		desc:'Use CROSS gate to intersect signal path\'s.',
 		toolboxStateMax:4,
 		nodes:
 		[

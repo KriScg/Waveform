@@ -156,6 +156,27 @@ var DrawGrid = function()
 	ctx.stroke();
 }
 
+var DrawCrossGrid = function( posX, posY, nodeMinX, nodeMinY, nodeMaxX, nodeMaxY )
+{
+	ctx.lineWidth	= 1;
+	ctx.strokeStyle	= '#75A596'
+	ctx.beginPath();	
+	for ( var y = nodeMinY; y < nodeMaxY + 1; ++y )
+	{
+		for ( var x = nodeMinX; x < nodeMaxX + 1; ++x )
+		{
+			var size = 8;
+
+			ctx.moveTo( posX + x * TILE_W + 0.5, posY + y * TILE_H - size + 0.5 );
+			ctx.lineTo( posX + x * TILE_W + 0.5, posY + y * TILE_H + size + 0.5 );
+
+			ctx.moveTo( posX + x * TILE_W - size + 0.5, posY + y * TILE_H + 0.5 );
+			ctx.lineTo( posX + x * TILE_W + size + 0.5, posY + y * TILE_H + 0.5 );
+		}
+	}
+	ctx.stroke();
+}
+
 var DrawDoneIcon = function( posX, posY )
 {
 	ctx.strokeStyle = '515151';
