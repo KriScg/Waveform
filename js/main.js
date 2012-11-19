@@ -498,7 +498,7 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 		posX += 0.5;
 		posY += 0.5;
 	}
-	ctx.strokeStyle	= overlay ? '#777777' : 'blue';
+	ctx.strokeStyle	= overlay ? '#777777' : '333333';
 	ctx.lineWidth	= overlay ? 2 : 3;
 	ctx.lineCap		= 'round'
 	ctx.beginPath();
