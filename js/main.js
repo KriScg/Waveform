@@ -546,8 +546,19 @@ var DrawTestBench = function()
 	ctx.textAlign 	= 'left';
 	ctx.fillText( 'Cycle: ' + gSimulator.cycle.toString() + '/20' + ' Corectness: ' + gSimulator.score + '%', posX, posY - 25 );
 	
+	if ( gSimulator.cycle > 0 )
+	{
+		ctx.fillStyle	= '#D2D8C3';
+		ctx.lineWidth	= 3;
+		posY = 450;
+		ctx.beginPath();
+		ctx.rect( posX + ( gSimulator.cycle - 1 ) * width + 0.5, posY + 0.5 - 10, width, height * 2 * gPins.length + 6 );
+		ctx.fill();
+	}	
+
 	ctx.strokeStyle	= 'gray';
 	ctx.lineWidth	= 1;
+	ctx.beginPath();
 	for ( var i = 0; i < CYCLE_NUM + 1; ++i )
 	{
 		ctx.moveTo( posX + i * width + 0.5, posY + 0.5 - 10 );
@@ -560,16 +571,6 @@ var DrawTestBench = function()
 		ctx.lineTo( posX + 20 * width + 0.5, posY + 0.5 - 2 + i * height * 2 - height * 0.5 );
 	}
 	ctx.stroke();
-	
-	if ( gSimulator.cycle > 0 )
-	{
-		ctx.fillStyle	= '#D2D8C3';
-		ctx.lineWidth	= 3;
-		posY = 450;
-		ctx.beginPath();	
-		ctx.rect( posX + ( gSimulator.cycle - 1 ) * width + 0.5, posY + 0.5 - 10, width, height * 2 * gPins.length + 6 );
-		ctx.fill();
-	}
 	
 	var pinArrLen = gPins.length;
 	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
