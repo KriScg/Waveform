@@ -438,6 +438,46 @@ var gLevels =
 		]
 	},
 	{
+		name:'Madness',
+		desc:'...',
+		toolboxStateMax:4,
+		nodes:
+		[
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		],
+		pins:
+		[
+			{
+				name:'InputA',
+				nodeX:3,
+				nodeY:4,
+				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
+			},
+			{
+				name:'InputB',
+				nodeX:3,
+				nodeY:5,
+				waveform:[ 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0 ]
+			},
+			{
+				name:'Output',
+				nodeX:6, 
+				nodeY:4,
+				simWaveform:[],
+				waveform:[ 0, 2, 2, 1, 0, 2, 0, 1, 2, 1, 0, 2, 2, 1, 0, 2, 0, 1, 2, 1 ]
+			},			
+		]
+	},	
+	{
 		name:'State',
 		desc:'Now this one is a bit different...',
 		toolboxStateMax:4,
@@ -498,25 +538,25 @@ var gLevels =
 		[
 			{
 				name:'InputA',
-				nodeX:2,
+				nodeX:0,
 				nodeY:4,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
 				name:'InputB',
-				nodeX:2,
+				nodeX:0,
 				nodeY:5,
 				waveform:[ 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 ]
 			},
 			{
 				name:'InputC',
-				nodeX:2,
+				nodeX:0,
 				nodeY:6,
 				waveform:[ 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 ]
 			},
 			{
 				name:'Output', 
-				nodeX:6, 
+				nodeX:9, 
 				nodeY:4,
 				simWaveform:[],
 				waveform:[ 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1 ]
