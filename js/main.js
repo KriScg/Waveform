@@ -43,9 +43,9 @@ for ( var i = 0; i < 4; ++i )
 	var texts	= [ 'VERIFY', 'STEP', 'STOP', 'MENU' ];
 	var btnW 	= 75;
 	var btnH 	= 30;
-	var btnX 	= 150 + i * ( btnW + 3 );
+	var btnX 	= 150 + i * ( btnW + 4 );
 	var btnY 	= 380;
-	gHUDButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], textOffX:25, background:'#A0E5FF', focus:false, enabled:true } );	
+	gHUDButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], textOffX:25 } );	
 }
 gHUDButtons[ 3 ].textOffX	= null;
 gHUDButtons[ 3 ].width		= 60;
@@ -59,17 +59,17 @@ for ( var i = 0; i < 5; ++i )
 	var btnW 	= 60;
 	var btnH 	= 60;
 	var btnX 	= 530;
-	var btnY 	= 20 + i * ( btnH + 3 );
-	gToolButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ], background:'#A0E5FF', focus:false, enabled:true } );
+	var btnY 	= 20 + i * ( btnH + 4 );
+	gToolButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ] } );
 }
 
 var gEndLevelButtons = [];
-gEndLevelButtons.push( { posX:210, posY:320, width:80, height:40, text:'Restart level', background:'#A0E5FF', focus:false, enabled:true } );
-gEndLevelButtons.push( { posX:310, posY:320, width:80, height:40, text:'Next level', background:'#A0E5FF', focus:false, enabled:true } );
+gEndLevelButtons.push( { posX:210, posY:320, width:80, height:40, text:'Restart level' } );
+gEndLevelButtons.push( { posX:310, posY:320, width:80, height:40, text:'Next level' } );
 
 var gQuestionButtons =[];
-gQuestionButtons.push( { posX:210, posY:320, width:80, height:40, text:'Yes', background:'#A0E5FF', focus:false, enabled:true } );
-gQuestionButtons.push( { posX:310, posY:320, width:80, height:40, text:'No', background:'#A0E5FF', focus:false, enabled:true } );
+gQuestionButtons.push( { posX:210, posY:320, width:80, height:40, text:'Yes' } );
+gQuestionButtons.push( { posX:310, posY:320, width:80, height:40, text:'No' } );
 
 var gMainMenuButtons = [];
 for ( var i = 0; i < gLevels.length; ++i )
@@ -79,7 +79,7 @@ for ( var i = 0; i < gLevels.length; ++i )
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
-	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:180 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:20, background:'#A0E5FF', focus:false, enabled:true } );
+	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:180 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:22 } );
 }
 
 var SimulateReset = function()
@@ -110,14 +110,7 @@ var SimulateReset = function()
 
 var SelectTool = function( toolID )
 {
-	toolID = Math.min( toolID, gToolboxStateMax );
-
-	var len = gToolButtons.length;
-	for ( var i = 0; i < len; ++i )
-	{
-		gToolButtons[ i ].focus = i == toolID;
-	}
-	gToolboxState = toolID;
+	gToolboxState = Math.min( toolID, gToolboxStateMax );
 }
 
 var LoadLevel = function( levelID )
@@ -129,12 +122,6 @@ var LoadLevel = function( levelID )
 	gPins 				= level.pins;
 	gGateArray.length 	= 0;
 	gToolboxStateMax	= level.toolboxStateMax;
-	
-	var len = gToolButtons.length;
-	for ( var i = 0; i < len; ++i )
-	{
-		gToolButtons[ i ].enabled = gToolboxStateMax >= i;
-	}
 
 	gNodeBRect = { minX:NODE_NUM_X, minY:NODE_NUM_Y, maxX:0, maxY:0 };
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
@@ -589,7 +576,10 @@ var DrawToolbox = function()
 	var len = gToolButtons.length;
 	for ( var i = 0; i < len; ++i )
 	{
-		DrawButton( gToolButtons[ i ] );
+		if ( gToolboxStateMax >= i )
+		{
+			DrawButton( gToolButtons[ i ], i == gToolboxState );
+		}
 	}
 }
 
@@ -655,8 +645,9 @@ var DrawEndLevelWindow = function()
 	var windowW = 250;
 	var windowH = 170;
 
-	ctx.strokeStyle = 'black';
-	ctx.fillStyle = '#F2FACF';
+	ctx.strokeStyle	= 'black';
+	ctx.fillStyle 	= '#F2FACF';
+	ctx.lineWidth	= 2;	
 	ctx.beginPath();
 	ctx.rect( ( WIDTH - windowW ) * 0.5, ( HEIGHT - windowH ) * 0.5, windowW, windowH );
 	ctx.fill();
@@ -681,8 +672,9 @@ var DrawQuestionWindow = function()
 	var windowW = 250;
 	var windowH = 170;
 
-	ctx.strokeStyle = 'black';
-	ctx.fillStyle = '#F2FACF';
+	ctx.strokeStyle	= 'black';
+	ctx.fillStyle	= '#F2FACF';
+	ctx.lineWidth	= 2;
 	ctx.beginPath();
 	ctx.rect( ( WIDTH - windowW ) * 0.5, ( HEIGHT - windowH ) * 0.5, windowW, windowH );
 	ctx.fill();
@@ -720,8 +712,7 @@ var DrawMainMenu = function()
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )
 	{
-		gMainMenuButtons[ i ].background = i <= gUnlockedLevelID ? '#A0E5FF' : '#6C7E84';
-		DrawButton( gMainMenuButtons[ i ] );
+		DrawButton( gMainMenuButtons[ i ], false, i > gUnlockedLevelID );
 		if ( i < gUnlockedLevelID )
 		{
 			DrawDoneIcon( gMainMenuButtons[ i ].posX + 12, gMainMenuButtons[ i ].posY + gMainMenuButtons[ i ].height * 0.6 );
