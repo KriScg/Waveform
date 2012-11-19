@@ -543,18 +543,6 @@ var gLevels =
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'InputB',
-				nodeX:0,
-				nodeY:5,
-				waveform:[ 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 ]
-			},
-			{
-				name:'InputC',
-				nodeX:0,
-				nodeY:6,
-				waveform:[ 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 ]
-			},
-			{
 				name:'Output', 
 				nodeX:9, 
 				nodeY:4,

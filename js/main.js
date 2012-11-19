@@ -487,14 +487,21 @@ var DrawDesign = function()
 
 var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay )
 {
+	ctx.fillStyle 		= 'black';
 	ctx.font			= '12px Arial';
 	ctx.textAlign 		= 'right';
 	ctx.textBaseline	= 'middle';
 	ctx.fillText( text, posX - 5, posY + height * 0.5 );
 
-	ctx.strokeStyle = overlay ? '#777777' : 'blue';
-	ctx.lineWidth = 2;
-	ctx.beginPath();	
+	if ( !overlay )
+	{
+		posX += 0.5;
+		posY += 0.5;
+	}
+	ctx.strokeStyle	= overlay ? '#777777' : 'blue';
+	ctx.lineWidth	= overlay ? 2 : 3;
+	ctx.lineCap		= 'round'
+	ctx.beginPath();
 	for ( var i = 0; i < waveform.length; ++i )
 	{
 		if ( waveform[ i ] == 2 )
@@ -553,6 +560,16 @@ var DrawTestBench = function()
 		ctx.lineTo( posX + 20 * width + 0.5, posY + 0.5 - 2 + i * height * 2 - height * 0.5 );
 	}
 	ctx.stroke();
+	
+	if ( gSimulator.cycle > 0 )
+	{
+		ctx.fillStyle	= '#D2D8C3';
+		ctx.lineWidth	= 3;
+		posY = 450;
+		ctx.beginPath();	
+		ctx.rect( posX + ( gSimulator.cycle - 1 ) * width + 0.5, posY + 0.5 - 10, width, height * 2 * gPins.length + 6 );
+		ctx.fill();
+	}
 	
 	var pinArrLen = gPins.length;
 	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
@@ -994,7 +1011,7 @@ var InitGame = function()
 		gUnlockedLevelID = parseInt( value );
 	}
 	LoadLevel( 0 );
-	gGameState = GameStateEnum.MAIN_MENU;
+	//gGameState = GameStateEnum.MAIN_MENU;
 }
 
 var DrawGame = function()
