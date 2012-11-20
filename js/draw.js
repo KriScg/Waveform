@@ -98,9 +98,9 @@ var DrawCross = function( posX, posY )
 	ctx.lineTo( posX + TILE_W, posY );
 }
 
-var DrawButton = function( button, focus, disabled )
+var DrawButton = function( button, focus, disabled, lineWidth )
 {
-	DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, focus ? '#FF0000' : '#000000', disabled ? '#7F6A4F' : '#FCBC5F' );
+	DrawRoundedRect( button.posX, button.posY, button.width, button.height, 5, lineWidth, focus ? '#FF0000' : '#000000', disabled ? '#7F6A4F' : '#FCBC5F' );
 
 	ctx.font			= 'bold 12px Arial';
 	ctx.textAlign 		= button.textOffX ? 'left' : 'center';

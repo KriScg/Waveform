@@ -10,7 +10,7 @@ var gLevels =
 [
 	{
 		name:'Routing',
-		desc:'Route clock signal from input to output. Click between adjacent nodes in order to connect them horizontally or vertically. After connecting nodes use verify button. Reference output waveform needs to match simulated waveform.',
+		desc:'Route clock signal from input to output using PATH tool. After connecting nodes use verify button. Reference output waveform needs to match simulated waveform.',
 		toolboxStateMax:0,
 		nodes:
 		[
@@ -42,7 +42,7 @@ var gLevels =
 	},
 	{
 		name:'Inverted',
-		desc:'Use NOT gate to invert input and route it to output. Select NOT gate by pressing "2" or selecting it with mouse and place it horizontally between two adjacent nodes. Use the step button in order to debug the design.',
+		desc:'Use NOT gate to invert input and route it to output. Try to use step button in order to debug the design.',
 		toolboxStateMax:1,
 		nodes:
 		[
@@ -170,7 +170,7 @@ var gLevels =
 	},	
 	{
 		name:'Maximum',
-		desc:'Try to analyze input and output signals and find the pattern. Remember to use new available gate type - OR. It produces HI if any of it\'s inputs are HI.',
+		desc:'Try to analyze input and output signals and find the pattern. Remember to use new available gate type - OR.',
 		toolboxStateMax:2,
 		nodes:
 		[
@@ -208,7 +208,7 @@ var gLevels =
 	},
 	{
 		name:'Conditional',
-		desc:'New gate type is available - AND. It produces HI signal only if both inputs are HI.',
+		desc:'New gate type is available - AND.',
 		toolboxStateMax:3,
 		nodes:
 		[
@@ -372,7 +372,7 @@ var gLevels =
 	},
 	{
 		name:'Crossing',
-		desc:'Use CROSS gate to intersect signal path\'s.',
+		desc:'Use CROSS gate to intersect signal path.\'s.',
 		toolboxStateMax:4,
 		nodes:
 		[

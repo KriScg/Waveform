@@ -58,24 +58,24 @@ for ( var i = 0; i < 5; ++i )
 	var texts	= [ '1 PATH', '2 NOT', '3 OR', '4 AND', '5 CROSS' ];
 	var btnW 	= 60;
 	var btnH 	= 60;
-	var btnX 	= 530;
-	var btnY 	= 20 + i * ( btnH + 4 );
+	var btnX 	= 530 + 0.5;
+	var btnY 	= 20 + i * ( btnH + 4 ) + 0.5;
 	gToolButtons.push( { posX:btnX, posY:btnY, width:btnW, height:btnH, text:texts[ i ] } );
 }
 
 var gEndLevelButtons = [];
-gEndLevelButtons.push( { posX:210, posY:320, width:80, height:40, text:'Restart level' } );
-gEndLevelButtons.push( { posX:310, posY:320, width:80, height:40, text:'Next level' } );
+gEndLevelButtons.push( { posX:210, posY:320, width:80, height:30, text:'Restart level' } );
+gEndLevelButtons.push( { posX:310, posY:320, width:80, height:30, text:'Next level' } );
 
 var gQuestionButtons =[];
-gQuestionButtons.push( { posX:210, posY:320, width:80, height:40, text:'Yes' } );
-gQuestionButtons.push( { posX:310, posY:320, width:80, height:40, text:'No' } );
+gQuestionButtons.push( { posX:210, posY:320, width:80, height:30, text:'Yes' } );
+gQuestionButtons.push( { posX:310, posY:320, width:80, height:30, text:'No' } );
 
 var gMainMenuButtons = [];
 for ( var i = 0; i < gLevels.length; ++i )
 { 
 	var btnW 	= 120;
-	var btnH 	= 50;
+	var btnH 	= 40;
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
@@ -499,13 +499,8 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 	ctx.textBaseline	= 'middle';
 	ctx.fillText( text, posX - 5, posY + height * 0.5 );
 
-	if ( !overlay )
-	{
-		posX += 0.5;
-		posY += 0.5;
-	}
-	ctx.strokeStyle	= overlay ? '#777777' : '#333333';
-	ctx.lineWidth	= overlay ? 2 : 3;
+	ctx.strokeStyle	= overlay ? '#888888' : '#000000';
+	ctx.lineWidth	= 2;
 	ctx.lineCap		= 'round'
 	ctx.beginPath();
 	for ( var i = 0; i < waveform.length; ++i )
@@ -619,7 +614,7 @@ var DrawToolbox = function()
 	{
 		if ( gToolboxStateMax >= i )
 		{
-			DrawButton( gToolButtons[ i ], i == gToolboxState );
+			DrawButton( gToolButtons[ i ], i == gToolboxState, false, 3 );
 		}
 	}
 }
@@ -629,7 +624,7 @@ var DrawHUD = function()
 	var len = gHUDButtons.length;
 	for ( var i = 0; i < len; ++i )
 	{
-		DrawButton( gHUDButtons[ i ] );
+		DrawButton( gHUDButtons[ i ], false, false, 2 );
 		
 		switch ( i )
 		{
@@ -654,7 +649,8 @@ var DrawDesc = function()
 	
 	var maxWidth = 190;
 	var lineHeight = 20;	
-	var words = gLevels[ gCurrLevelID ].desc.split(' ');
+	var hintString = gCurrHintID == -1 ? gLevels[ gCurrLevelID ].desc : gHints[ gCurrHintID ];
+	var words = hintString.split(' ');
 	var line = '';
 
 	ctx.font 			= '12px Arial';
@@ -706,7 +702,7 @@ var DrawEndLevelWindow = function()
 	var len = gEndLevelButtons.length;
 	for ( var i = 0; i < len; ++i )
 	{
-		DrawButton( gEndLevelButtons[ i ] );
+		DrawButton( gEndLevelButtons[ i ], false, false, 2 );
 	}
 }
 
@@ -732,14 +728,14 @@ var DrawQuestionWindow = function()
 	var len = gQuestionButtons.length;
 	for ( var i = 0; i < len; ++i )
 	{
-		DrawButton( gQuestionButtons[ i ] );
+		DrawButton( gQuestionButtons[ i ], false, false, 2 );
 	}
 }
 
 var DrawMainMenu = function()
 {
 	DrawGrid();
-	DrawRoundedRect( 100, 125, 410, 360, 5, 2, 'black', '#89C1B1' );
+	DrawRoundedRect( 100, 125, 410, 310, 5, 2, 'black', '#89C1B1' );
 	
 	//ctx.font			= '60px orbitron-bold-webfont';
 	ctx.font			= 'bold 60px Arial';
@@ -755,7 +751,7 @@ var DrawMainMenu = function()
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )
 	{
-		DrawButton( gMainMenuButtons[ i ], false, i > gUnlockedLevelID );
+		DrawButton( gMainMenuButtons[ i ], false, i > gUnlockedLevelID, 2 );
 		if ( i < gUnlockedLevelID )
 		{
 			DrawDoneIcon( gMainMenuButtons[ i ].posX + 12, gMainMenuButtons[ i ].posY + gMainMenuButtons[ i ].height * 0.6 );
@@ -877,6 +873,56 @@ document.onkeydown = function( e )
 	
 	
 	DrawGame();
+}
+
+var gCurrHintID = -1;
+var gHints =
+[
+	'PATH - use it to connect adjacent nodes (horizontally or vertically). Keyboard shortcut - "1".',
+	'NOT - use it to negate signal. Keyboard shortcut - "2".',
+	'OR - produces HI signal if any of it\'s inputs are HI. Keyboard shortcut - "3".',
+	'AND - It produces HI signal only if both inputs are HI. Keyboard shortcut - "4".',
+	'CROSS - allows to intesect signal paths. Keyboard shortcut - "5".',
+	'VERIFY - use to test the design and finish level if it\s 100% correct.',
+	'STEP - use to debug the design by stepping cycle and analyzing signal flow.',
+	'STOP - use to stop debugging or validation.',
+]
+
+c.onmousemove = function( e )
+{
+	var mousePosX = e.pageX - c.offsetLeft;
+	var mousePosY = e.pageY - c.offsetTop;
+
+	var hintID = -1;
+
+	var len = gToolButtons.length;
+	for ( var i = 0; i < len; ++i )
+	{
+		if ( gToolboxStateMax >= i && OnButtonMouseDown( gToolButtons[ i ], mousePosX, mousePosY ) )
+		{
+			hintID = i;
+		}
+	}
+	
+	var len = gHUDButtons.length;
+	for ( var i = 0; i < len; ++i )
+	{
+		if ( OnButtonMouseDown( gHUDButtons[ i ], mousePosX, mousePosY ) )
+		{
+			hintID = i + 5;
+		}
+	}
+	
+	if ( gGameState != GameStateEnum.DEBUG && gGameState != GameStateEnum.DESIGN && gGameState != GameStateEnum.VERIFY )
+	{
+		hintID = -1;
+	}
+	
+	if ( gCurrHintID != hintID && hintID < gHints.length )
+	{
+		gCurrHintID = hintID;
+		DrawGame();
+	}
 }
 
 c.onmousedown = function( e )
