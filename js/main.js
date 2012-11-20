@@ -2,10 +2,10 @@ var WIDTH 				= 600,
 	HEIGHT 				= 600,
 	TILE_W 				= 36,
 	TILE_H 				= 36,
-	NODE_NUM_X 			= 10,
-	NODE_NUM_Y 			= 10,
-	GRID_OFF_X			= TILE_W * 4,
-	GRID_OFF_Y			= TILE_H,
+	NODE_NUM_X 			= 8,
+	NODE_NUM_Y 			= 8,
+	GRID_OFF_X			= TILE_W * 5,
+	GRID_OFF_Y			= TILE_H * 2,
 	SUBCYCLE_NUM		= 40,
 	SUBCYCLE_STABLE_NUM	= 20,
 	CYCLE_NUM			= 20,
@@ -22,6 +22,7 @@ var gCurrLevelID		= 0;
 var gUnlockedLevelID 	= 0;
 var gStateToColor 		= [ '#0000FF', '#FF0000', '#FF00FF' ];
 var gNodeBRect			= { minX:0, minY:0, maxX:0, maxY:0 };
+var gLastVerRes			= -1;
 
 var GameStateEnum =
 {
@@ -32,7 +33,6 @@ var GameStateEnum =
 	QUESTION	: 4,
 	MAIN_MENU	: 5
 }
-var gGameStateDesc		= [ 'Designing', 'Debugging', 'Verifying', 'Completed', 'Designing', 'Menu' ]
 var gGameState			= GameStateEnum.MAIN_MENU;
 var gToolboxState		= 0;
 var gToolboxStateMax	= 0;
@@ -88,6 +88,7 @@ var SimulateReset = function()
 	gSimulator.score		= 0;
 	gSimulator.subCycle 	= 0;
 	gDirtyNodeArray.length	= 0;
+	gLastVerRes				= -1;
 	
 	var pinArrLen = gPins.length;
 	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
@@ -161,9 +162,14 @@ var Verify = function()
 			gGameState = GameStateEnum.DESIGN;
 			if ( gSimulator.score == 100 )
 			{
+				gLastVerRes = 1;
 				gUnlockedLevelID = Math.max( gUnlockedLevelID, gCurrLevelID + 1 );
 				gGameState = GameStateEnum.END_LEVEL;
 				//localStorage.setItem( 'UnlockedLevelID', gUnlockedLevelID.toString() );
+			}
+			else
+			{
+				gLastVerRes = 0;
 			}
 		}
 		
@@ -487,7 +493,7 @@ var DrawDesign = function()
 
 var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay )
 {
-	ctx.fillStyle 		= 'black';
+	ctx.fillStyle 		= '#000000';
 	ctx.font			= '12px Arial';
 	ctx.textAlign 		= 'right';
 	ctx.textBaseline	= 'middle';
@@ -498,7 +504,7 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 		posX += 0.5;
 		posY += 0.5;
 	}
-	ctx.strokeStyle	= overlay ? '#777777' : '333333';
+	ctx.strokeStyle	= overlay ? '#777777' : '#333333';
 	ctx.lineWidth	= overlay ? 2 : 3;
 	ctx.lineCap		= 'round'
 	ctx.beginPath();
@@ -529,7 +535,7 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 var DrawTestBench = function()
 {
 	var posX 	= 60;
-	var posY 	= 450;
+	var posY 	= 430;
 	var width 	= 16;
 	var height 	= 16;
 	
@@ -540,17 +546,11 @@ var DrawTestBench = function()
 	ctx.closePath();
 	ctx.fill();
 	ctx.stroke();
-	
-	ctx.fillStyle 	= 'black';
-	ctx.font 		= '12px Arial';
-	ctx.textAlign 	= 'left';
-	ctx.fillText( 'Cycle: ' + gSimulator.cycle.toString() + '/20' + ' Corectness: ' + gSimulator.score + '%', posX, posY - 25 );
-	
+
 	if ( gSimulator.cycle > 0 )
 	{
 		ctx.fillStyle	= '#D2D8C3';
 		ctx.lineWidth	= 3;
-		posY = 450;
 		ctx.beginPath();
 		ctx.rect( posX + ( gSimulator.cycle - 1 ) * width + 0.5, posY + 0.5 - 10, width, height * 2 * gPins.length + 6 );
 		ctx.fill();
@@ -587,6 +587,29 @@ var DrawTestBench = function()
 		}
 		posY += height * 2.0;
 	}
+	
+	ctx.fillStyle 	= 'black';
+	ctx.font 		= '12px Arial';
+	ctx.textAlign 	= 'left';
+
+	if ( gGameState == GameStateEnum.VERIFY )
+	{
+		ctx.fillText( 'VERIFYING (cycle: ' + gSimulator.cycle + '/20 corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+	}
+	else if ( gGameState == GameStateEnum.DEBUG )
+	{
+		ctx.fillText( 'DEBUGGING (cycle: ' + gSimulator.cycle + '/20 corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+	}
+	else if ( gLastVerRes == 0 )
+	{
+		ctx.fillStyle = 'red';
+		ctx.fillText( 'VERIFICATION FAILED (corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+	}
+	else if ( gLastVerRes == 1 )
+	{
+		ctx.fillStyle = 'green';
+		ctx.fillText( 'VERIFICATION PASSED', posX, posY + 10 );
+	}
 };
 
 var DrawToolbox = function()
@@ -619,23 +642,25 @@ var DrawHUD = function()
 	ctx.font		= '12px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';	
-	ctx.fillText( gLevels[ gCurrLevelID ].name + ' - ' + gGameStateDesc[ gGameState ] + '...', 10, 20 );
+	ctx.fillText( gLevels[ gCurrLevelID ].name, 10, 20 );
 }
 
 var DrawDesc = function()
 {	
-	ctx.font 			= '12px Arial';
-	ctx.fillStyle 		= 'black';
-	ctx.textAlign 		= 'left';
-	ctx.textBaseline 	= 'middle';
-	
 	var x = 405;
-	var y = 400;
+	var y = 390;	
+	
+	DrawRoundedRect( x - 10 + 0.5, y - 17 + 0.5, 200, 180, 5, 1, '#665A51', '#F2FADF' );
+	
 	var maxWidth = 190;
 	var lineHeight = 20;	
 	var words = gLevels[ gCurrLevelID ].desc.split(' ');
 	var line = '';
 
+	ctx.font 			= '12px Arial';
+	ctx.fillStyle 		= 'black';
+	ctx.textAlign 		= 'left';
+	ctx.textBaseline 	= 'middle';	
 	for ( var n = 0; n < words.length; ++n ) 
 	{
 		var testLine = line + words[ n ] + ' ';

@@ -100,12 +100,12 @@ var DrawCross = function( posX, posY )
 
 var DrawButton = function( button, focus, disabled )
 {
-	DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, focus ? '#FF0000' : '#665A51', disabled ? '#7F6A4F' : '#FCBC5F' );
+	DrawRoundedRect( button.posX, button.posY, button.width, button.height, 10, 2, focus ? '#FF0000' : '#000000', disabled ? '#7F6A4F' : '#FCBC5F' );
 
 	ctx.font			= 'bold 12px Arial';
 	ctx.textAlign 		= button.textOffX ? 'left' : 'center';
 	ctx.textBaseline 	= 'middle';
-	ctx.fillStyle 		= disabled ? '#665A51' : '#493C2E'
+	ctx.fillStyle 		= disabled ? '#665A51' : '#000000'
 	ctx.fillText( button.text, button.posX + ( button.textOffX ? button.textOffX : button.width * 0.5 ), button.posY + button.height * 0.5 );		
 }
 
@@ -176,8 +176,8 @@ var DrawCrossGrid = function( posX, posY, nodeMinX, nodeMinY, nodeMaxX, nodeMaxY
 
 var DrawDoneIcon = function( posX, posY )
 {
-	ctx.strokeStyle = '#665A51';
-	ctx.fillStyle 	= '#665A51';
+	ctx.strokeStyle = '#000000';
+	ctx.fillStyle 	= '#000000';
 	ctx.lineCap 	= 'round';	
 	ctx.lineWidth	= 3;
 	ctx.beginPath();
@@ -190,8 +190,8 @@ var DrawDoneIcon = function( posX, posY )
 
 var DrawStopIcon = function( posX, posY )
 {
-	ctx.strokeStyle = '#665A51';
-	ctx.fillStyle 	= '#665A51';
+	ctx.strokeStyle = '#000000';
+	ctx.fillStyle 	= '#000000';
 	ctx.beginPath();
 	ctx.rect( posX, posY, 14, 14 );
 	ctx.fill();
@@ -199,8 +199,8 @@ var DrawStopIcon = function( posX, posY )
 
 var DrawStepIcon = function( posX, posY )
 {
-	ctx.strokeStyle = '#665A51';
-	ctx.fillStyle 	= '#665A51';
+	ctx.strokeStyle = '#000000';
+	ctx.fillStyle 	= '#000000';
 	ctx.beginPath();
 	ctx.moveTo( posX, posY );
 	ctx.lineTo( posX + 10, posY + 7 );
@@ -213,8 +213,8 @@ var DrawRunIcon = function( posX, posY )
 {
 	posY += 2;
 
-	ctx.strokeStyle = '#665A51';
-	ctx.fillStyle 	= '#665A51';
+	ctx.strokeStyle = '#000000';
+	ctx.fillStyle 	= '#000000';
 	ctx.beginPath();
 	ctx.moveTo( posX, posY );
 	ctx.lineTo( posX + 7, posY + 5 );
