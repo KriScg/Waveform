@@ -26,13 +26,13 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'Input',
+				name:'input',
 				nodeX:2,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:4,
 				nodeY:3,
 				simWaveform:[],
@@ -58,13 +58,13 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'Input',
+				name:'input',
 				nodeX:2,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:4, 
 				nodeY:3,
 				simWaveform:[],
@@ -90,13 +90,13 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'Input',
+				name:'input',
 				nodeX:2,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -122,13 +122,13 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'Input',
+				name:'input',
 				nodeX:2,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -154,13 +154,13 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'Input',
+				name:'input',
 				nodeX:2,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -186,19 +186,19 @@ var gLevels =
 		pins:
 		[	
 			{
-				name:'InputA',
+				name:'input A',
 				nodeX:1,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'InputB',
+				name:'input B',
 				nodeX:1,
 				nodeY:4,
 				waveform:[ 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -224,19 +224,19 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'InputA',
+				name:'input A',
 				nodeX:1,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'InputB',
+				name:'input B',
 				nodeX:1,
 				nodeY:4,
 				waveform:[ 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output',
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -262,19 +262,19 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'InputA',
+				name:'input A',
 				nodeX:1,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'InputB',
+				name:'input B',
 				nodeX:1,
 				nodeY:4,
 				waveform:[ 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0 ]
 			},
 			{
-				name:'Output', 
+				name:'output',
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -300,25 +300,25 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'InputA',
+				name:'input A',
 				nodeX:1,
 				nodeY:3,
 				waveform:[ 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 ]
 			},
 			{
-				name:'InputB',
+				name:'input B',
 				nodeX:1,
 				nodeY:4,
 				waveform:[ 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0 ]
 			},
 			{
-				name:'InputC',
+				name:'input C',
 				nodeX:1,
 				nodeY:5,
 				waveform:[ 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 ]
 			},		
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -344,25 +344,25 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'InputA',
+				name:'input A',
 				nodeX:1,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'InputB',
+				name:'input B',
 				nodeX:1,
 				nodeY:4,
 				waveform:[ 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 ]
 			},
 			{
-				name:'InputC',
+				name:'input C',
 				nodeX:1,
 				nodeY:5,
 				waveform:[ 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -388,26 +388,26 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'InputA',
+				name:'input A',
 				nodeX:2,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'InputB',
+				name:'input B',
 				nodeX:2,
 				nodeY:4,
 				waveform:[ 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 ]
 			},
 			{
-				name:'OutputA',
+				name:'output A',
 				nodeX:5,
 				nodeY:3,
 				simWaveform:[],
 				waveform:[ 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1 ]
 			},
 			{
-				name:'OutputB', 
+				name:'output B',
 				nodeX:5, 
 				nodeY:4,
 				simWaveform:[],
@@ -433,19 +433,19 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'InputA',
+				name:'input A',
 				nodeX:2,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'InputB',
+				name:'input B',
 				nodeX:2,
 				nodeY:4,
 				waveform:[ 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0 ]
 			},
 			{
-				name:'Output',
+				name:'output',
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -471,19 +471,19 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'InputR',
+				name:'input R',
 				nodeX:2,
 				nodeY:3,
 				waveform:[ 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 ]
 			},
 			{
-				name:'InputS',
+				name:'input S',
 				nodeX:2,
 				nodeY:4,
 				waveform:[ 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 ]
 			},		
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:5, 
 				nodeY:3,
 				simWaveform:[],
@@ -509,13 +509,13 @@ var gLevels =
 		pins:
 		[
 			{
-				name:'InputA',
+				name:'input A',
 				nodeX:0,
 				nodeY:3,
 				waveform:[ 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
 			},
 			{
-				name:'Output', 
+				name:'output', 
 				nodeX:7,
 				nodeY:3,
 				simWaveform:[],

@@ -6,8 +6,8 @@ var WIDTH 				= 600,
 	NODE_NUM_Y 			= 8,
 	GRID_OFF_X			= TILE_W * 5,
 	GRID_OFF_Y			= TILE_H * 2,
-	SUBCYCLE_NUM		= 40,
-	SUBCYCLE_STABLE_NUM	= 20,
+	SUBCYCLE_NUM		= 50,
+	SUBCYCLE_STABLE_NUM	= 25,
 	CYCLE_NUM			= 20,
 	c 					= document.getElementById('c'), 
 	ctx 				= c.getContext('2d');			
@@ -64,12 +64,12 @@ for ( var i = 0; i < 5; ++i )
 }
 
 var gEndLevelButtons = [];
-gEndLevelButtons.push( { posX:210, posY:320, width:80, height:30, text:'Restart level' } );
-gEndLevelButtons.push( { posX:310, posY:320, width:80, height:30, text:'Next level' } );
+gEndLevelButtons.push( { posX:210, posY:340, width:80, height:30, text:'Next level' } );
+gEndLevelButtons.push( { posX:310, posY:340, width:80, height:30, text:'Restart level' } );
 
 var gQuestionButtons =[];
-gQuestionButtons.push( { posX:210, posY:320, width:80, height:30, text:'Yes' } );
-gQuestionButtons.push( { posX:310, posY:320, width:80, height:30, text:'No' } );
+gQuestionButtons.push( { posX:210, posY:340, width:80, height:30, text:'Yes' } );
+gQuestionButtons.push( { posX:310, posY:340, width:80, height:30, text:'No' } );
 
 var gMainMenuButtons = [];
 for ( var i = 0; i < gLevels.length; ++i )
@@ -679,56 +679,43 @@ var DrawDesc = function()
 	// ctx.fillText( "Use to connect two nodes", 10, 350 );
 }
 
-var DrawEndLevelWindow = function()
+var DrawWindow = function( endLevel )
 {
 	var windowW = 250;
 	var windowH = 170;
-
-	ctx.strokeStyle	= 'black';
-	ctx.fillStyle 	= '#F2FACF';
-	ctx.lineWidth	= 2;	
-	ctx.beginPath();
-	ctx.rect( ( WIDTH - windowW ) * 0.5, ( HEIGHT - windowH ) * 0.5, windowW, windowH );
-	ctx.fill();
-	ctx.stroke();	
 	
-	ctx.font			= '12px Arial';
+	ctx.globalAlpha = 0.4;
+	ctx.fillStyle 	= 'black';
+	ctx.rect( 0, 0, WIDTH, HEIGHT );
+	ctx.fill();	
+	ctx.globalAlpha = 1.0;
+
+	DrawRoundedRect( ( WIDTH - windowW ) * 0.5, ( HEIGHT - windowH ) * 0.5, windowW, windowH, 5, 2, 'black', '#F2FACF' );
+	
+	ctx.font			= '18px Arial';
 	ctx.fillStyle		= 'black';
 	ctx.textAlign		= 'center';	
 	ctx.textBaseline	= 'middle';
-	ctx.fillText( gLevels[ gCurrLevelID ].name, WIDTH * 0.5, HEIGHT * 0.5 - 60 );
-	ctx.fillText( 'Design completed!', WIDTH * 0.5, HEIGHT * 0.5 - 30 );
 	
-	var len = gEndLevelButtons.length;
-	for ( var i = 0; i < len; ++i )
+	if ( gGameState == GameStateEnum.END_LEVEL )
 	{
-		DrawButton( gEndLevelButtons[ i ], false, false, 2 );
+		ctx.fillText( gLevels[ gCurrLevelID ].name, WIDTH * 0.5, HEIGHT * 0.5 - 50 );
+		ctx.fillText( 'Design completed!', WIDTH * 0.5, HEIGHT * 0.5 - 20 );
+		
+		var len = gEndLevelButtons.length;
+		for ( var i = 0; i < len; ++i )
+		{
+			DrawButton( gEndLevelButtons[ i ], false, false, 2 );
+		}		
 	}
-}
-
-var DrawQuestionWindow = function()
-{
-	var windowW = 250;
-	var windowH = 170;
-
-	ctx.strokeStyle	= 'black';
-	ctx.fillStyle	= '#F2FACF';
-	ctx.lineWidth	= 2;
-	ctx.beginPath();
-	ctx.rect( ( WIDTH - windowW ) * 0.5, ( HEIGHT - windowH ) * 0.5, windowW, windowH );
-	ctx.fill();
-	ctx.stroke();	
-	
-	ctx.font			= '12px Arial';
-	ctx.fillStyle		= 'black';
-	ctx.textAlign		= 'center';	
-	ctx.textBaseline	= 'middle';
-	ctx.fillText( 'Do you want to return to main menu?', WIDTH * 0.5, HEIGHT * 0.5 - 30 );
-	
-	var len = gQuestionButtons.length;
-	for ( var i = 0; i < len; ++i )
+	else
 	{
-		DrawButton( gQuestionButtons[ i ], false, false, 2 );
+		ctx.fillText( 'Return to main menu?', WIDTH * 0.5, HEIGHT * 0.5 - 30 );
+		var len = gQuestionButtons.length;
+		for ( var i = 0; i < len; ++i )
+		{
+			DrawButton( gQuestionButtons[ i ], false, false, 2 );
+		}		
 	}
 }
 
@@ -1021,10 +1008,6 @@ c.onmousedown = function( e )
 					switch ( i )
 					{
 						case 0:
-							LoadLevel( gCurrLevelID );
-							break;
-
-						case 1:
 							if ( gCurrLevelID + 1 < gLevels.length )
 							{
 								LoadLevel( gCurrLevelID + 1 );
@@ -1034,6 +1017,10 @@ c.onmousedown = function( e )
 								gGameState = GameStateEnum.MAIN_MENU;
 							}
 							break;
+							
+						case 1:
+							LoadLevel( gCurrLevelID );
+							break;							
 					}
 				}
 			}
@@ -1083,7 +1070,7 @@ var InitGame = function()
 		gUnlockedLevelID = parseInt( value );
 	}
 	LoadLevel( 0 );
-	//gGameState = GameStateEnum.MAIN_MENU;
+	gGameState = GameStateEnum.DESIGN;
 }
 
 var DrawGame = function()
@@ -1103,14 +1090,9 @@ var DrawGame = function()
 		DrawDesc();
 	}
 
-	if ( gGameState == GameStateEnum.END_LEVEL )
+	if ( gGameState == GameStateEnum.END_LEVEL || gGameState == GameStateEnum.QUESTION )
 	{
-		DrawEndLevelWindow();
-	}
-	
-	if ( gGameState == GameStateEnum.QUESTION )
-	{
-		DrawQuestionWindow();
+		DrawWindow();
 	}
 }
 
