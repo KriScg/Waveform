@@ -390,7 +390,7 @@ var DrawPin = function( pin )
 	ctx.textBaseline	= 'middle';
 	ctx.lineWidth		= 2;
 	
-	var offX = pin.simWaveform ? 37 : -38;
+	var offX = pin.simWaveform ? 38 : -39;
 	ctx.fillText( pin.name, GRID_OFF_X + pin.nodeX * TILE_W + offX, GRID_OFF_Y + pin.nodeY * TILE_H );
 	
 	ctx.fillStyle = '#FFDD00';
@@ -634,10 +634,10 @@ var DrawHUD = function()
 		}
 	}
 	
-	ctx.font		= '12px Arial';
+	ctx.font		= '16px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';	
-	ctx.fillText( gLevels[ gCurrLevelID ].name, 10, 20 );
+	ctx.fillText( gLevels[ gCurrLevelID ].name, 17, 29 );
 }
 
 var DrawDesc = function()
@@ -724,7 +724,6 @@ var DrawMainMenu = function()
 	DrawGrid();
 	DrawRoundedRect( 100, 125, 410, 310, 5, 2, 'black', '#89C1B1' );
 	
-	//ctx.font			= '60px orbitron-bold-webfont';
 	ctx.font			= 'bold 60px Arial';
 	ctx.fillStyle 		= 'black';
 	ctx.textAlign 		= 'center';	
