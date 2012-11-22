@@ -106,7 +106,7 @@ var gLevels =
 	},
 	{
 		name:'Undefined',
-		desc:'There are 3 types of signal: LO (blue), HI (red) and undefined (purple).',
+		desc:'There are 3 types of signal: LO (blue), HI (red) and undefined (purple). The undefined signal is displayed as X on the waveform.',
 		toolboxStateMax:1,
 		nodes:
 		[
@@ -170,7 +170,7 @@ var gLevels =
 	},	
 	{
 		name:'Maximum',
-		desc:'Try to analyze input and output signals and find the pattern. Remember to use new available gate type - OR.',
+		desc:'Try to analyze input and output signals in order to find the pattern. Remember to use new available gate type - OR.',
 		toolboxStateMax:2,
 		nodes:
 		[
