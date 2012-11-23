@@ -352,7 +352,7 @@ var SimulateSubCycle = function()
 		}
 
 		// up
-		if ( nodeID > NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown && prevNodeID != nodeID - NODE_NUM_X )
+		if ( nodeID >= NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown && prevNodeID != nodeID - NODE_NUM_X )
 		{
 			WriteState( nodeID, nodeID - NODE_NUM_X );
 			gNodeArray[ nodeID - NODE_NUM_X ].connDownState = gNodeArray[ nodeID ].state;			
