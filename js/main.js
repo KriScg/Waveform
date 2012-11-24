@@ -15,7 +15,6 @@ var WIDTH 				= 600,
 	c.height 			= HEIGHT;
 var gNodeArray 			= [];
 var gGateArray			= [];
-var gDirtyNodeArray		= [];
 var gPins				= [];
 var gSimulator			= { cycle:0, subCycle:0, score:0 };
 var gCurrLevelID		= 0;
@@ -87,7 +86,6 @@ var SimulateReset = function()
 	gSimulator.cycle 		= 0;
 	gSimulator.score		= 0;
 	gSimulator.subCycle 	= 0;
-	gDirtyNodeArray.length	= 0;
 	gLastVerRes				= -1;
 	
 	var pinArrLen = gPins.length;
@@ -179,10 +177,12 @@ var Verify = function()
 
 var SimulateCycle = function()
 {
+	//gSimulator.cycle = 0;
+	gSimulator.subCycle = 0;
 	for ( var i = 0; i < SUBCYCLE_NUM; ++i )
 	{
-		gSimulator.subCycle = i;
 		SimulateSubCycle();
+		++gSimulator.subCycle;
 	}
 
 	// update outputs
@@ -211,48 +211,94 @@ var SimulateCycle = function()
 	gSimulator.score = Math.round( ( correctEntryNum * 100 ) / entryNum );
 }
 
-var EvaluateGateStates = function( gate )
+var EvaluateGateState = function( gate )
 {
-	var newStateA 	= 0;
-	var newStateB 	= 0;
-	var stateA 		= gate.srcNodeA != -1 ? gNodeArray[ gate.srcNodeA ].state : 2;
-	var stateB 		= gate.srcNodeB != -1 ? gNodeArray[ gate.srcNodeB ].state : 2;
+	var truthTable = [ 
+		// NOT
+		[ 	1, 0, 2,
+			0, 0, 2,
+			2, 2, 2 ],
+		// OR
+		[ 	0, 1, 2,
+			1, 1, 1,
+			2, 1, 2 ],
+		// AND
+		[ 	0, 0, 0,
+			0, 1, 2,
+			0, 2, 2 ] ];
 
-	switch ( gate.type )
-	{
-		case GateTypeEnum.NOT: 		newStateA = newStateB = stateA == 1 ? 0 : 1; break;
-		case GateTypeEnum.AND: 		newStateA = newStateB = stateA == 1 && stateB == 1 ? 1 : 0; break;
-		case GateTypeEnum.OR: 		newStateA = newStateB = stateA == 1 || stateB == 1 ? 1 : 0; break;
-		case GateTypeEnum.CROSS: 	newStateA = stateB; newStateB = stateA; break;
-	}
-
-	if ( stateA == 2 || ( stateB == 2 && gate.type != GateTypeEnum.NOT ) )
-	{
-		newStateA = 2;
-		newStateB = 2;
-	}	
-
-	return [ newStateA, newStateB ];
+	var stateA = gNodeArray[ gate.srcNodeA ].state;
+	var stateB = gNodeArray[ gate.srcNodeB ].state;			
+	var newState = truthTable[ gate.type ][ stateA + stateB * 3 ];
+	return newState;
 }
 
-var WriteState = function( srcNodeID, dstNodeID )
+var PushSignal = function( startNodeID, state )
 {
-	if ( gNodeArray[ dstNodeID ].state != gNodeArray[ srcNodeID ].state )
+	var dirtyNodes = [ startNodeID ];
+	
+	while ( dirtyNodes.length > 0 )
 	{
-		if ( gSimulator.subCycle < SUBCYCLE_STABLE_NUM )
+		var nodeID = dirtyNodes[ 0 ];
+		dirtyNodes.shift();
+		gNodeArray[ nodeID ].state = state;
+
+		// right
+		if ( gNodeArray[ nodeID ].connRight && gNodeArray[ nodeID ].state != gNodeArray[ nodeID + 1 ].state )
 		{
-			gDirtyNodeArray.push( { currID:dstNodeID, prevID:srcNodeID } );
-			gNodeArray[ dstNodeID ].state = gNodeArray[ srcNodeID ].state;
+			gNodeArray[ nodeID ].connRightState = state;
+			dirtyNodes.push( nodeID + 1 );
 		}
-		else
+		
+		// down
+		if ( gNodeArray[ nodeID ].connDown && gNodeArray[ nodeID ].state != gNodeArray[ nodeID + NODE_NUM_X ].state )
 		{
-			gDirtyNodeArray.push( { currID:dstNodeID, prevID:-1 } );
-			gNodeArray[ dstNodeID ].state = 2;
+			gNodeArray[ nodeID ].connDownState = state;
+			dirtyNodes.push( nodeID + NODE_NUM_X );
+		}
+
+		// left
+		if ( nodeID > 0 && gNodeArray[ nodeID - 1 ].connRight && gNodeArray[ nodeID ].state != gNodeArray[ nodeID - 1 ].state )
+		{
+			gNodeArray[ nodeID - 1 ].connRightState = state;
+			dirtyNodes.push( nodeID - 1 );
+		}
+
+		// up
+		if ( nodeID >= NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown && gNodeArray[ nodeID ].state != gNodeArray[ nodeID - NODE_NUM_X ].state )
+		{
+			gNodeArray[ nodeID - NODE_NUM_X ].connDownState = state;			
+			dirtyNodes.push( nodeID - NODE_NUM_X );
+		}
+		
+		var gateArrLen = gGateArray.length;
+		for ( var j = 0; j < gateArrLen; ++j )
+		{
+			var gate = gGateArray[ j ];
+			if ( gate.type == GateTypeEnum.CROSS )
+			{
+				if ( gate.srcNodeA == nodeID && gNodeArray[ gate.dstNodeB ].state != state )
+				{
+					dirtyNodes.push( gate.dstNodeB );
+				}
+				else if ( gate.srcNodeB == nodeID && gNodeArray[ gate.dstNodeA ].state != state )
+				{
+					dirtyNodes.push( gate.dstNodeA );
+				}
+				else if ( gate.dstNodeA == nodeID && gNodeArray[ gate.srcNodeB ].state != state )
+				{
+					dirtyNodes.push( gate.srcNodeB );
+				}
+				else if ( gate.dstNodeB == nodeID && gNodeArray[ gate.srcNodeA ].state != state )
+				{
+					dirtyNodes.push( gate.srcNodeA );
+				}
+			}
 		}
 	}
 }
 
-var WriteState2 = function( newState, dstNodeID )
+var ChangeNodeState = function( newState, dstNodeID )
 {
 	if ( dstNodeID != -1 && gNodeArray[ dstNodeID ].state != newState )
 	{
@@ -260,8 +306,8 @@ var WriteState2 = function( newState, dstNodeID )
 		{
 			newState = 2;
 		}
-		gNodeArray[ dstNodeID ].state = newState;
-		gDirtyNodeArray.push( { currID:dstNodeID, prevID:-1 } );
+		
+		PushSignal( dstNodeID, newState );
 	}
 }
 
@@ -277,102 +323,23 @@ var SimulateSubCycle = function()
 			if ( !pin.simWaveform )
 			{
 				var inputNodeID = pin.nodeX + pin.nodeY * NODE_NUM_X;
-				gNodeArray[ inputNodeID ].state = pin.waveform[ gSimulator.cycle ];
-				gDirtyNodeArray.push( { currID:inputNodeID, prevID:-1 } );
+				ChangeNodeState( pin.waveform[ gSimulator.cycle ], inputNodeID );			
 			}
-		}
-		
-		var gateArrLen = gGateArray.length;
-		for ( var j = 0; j < gateArrLen; ++j )
-		{
-			var gate = gGateArray[ j ];
-			var newStates = EvaluateGateStates( gate );
-			WriteState2( newStates[ 0 ], gate.dstNodeA );
-			WriteState2( newStates[ 1 ], gate.dstNodeB );
 		}
 	}
 
-	// verify gate and input conditions
-	if ( gSimulator.subCycle == SUBCYCLE_STABLE_NUM )
+	var gateArrLen = gGateArray.length;
+	for ( var j = 0; j < gateArrLen; ++j )
 	{
-		var pinArrLen = gPins.length;
-		for ( var iPin = 0; iPin < pinArrLen; ++iPin )
+		var gate = gGateArray[ j ];
+		if ( gate.type != GateTypeEnum.CROSS )
 		{
-			var pin = gPins[ iPin ];
-			var inputNodeID = pin.nodeX + pin.nodeY * NODE_NUM_X;
-			if ( !pin.simWaveform && gNodeArray[ inputNodeID ].state != pin.waveform[ gSimulator.cycle ] )
-			{
-				gNodeArray[ inputNodeID ].state = 2;
-				gDirtyNodeArray.push( { currID:inputNodeID, prevID:-1 } );
-			}
-		}
-
-		var gateArrLen = gGateArray.length;
-		for ( var j = 0; j < gateArrLen; ++j )
-		{
-			var gate = gGateArray[ j ];
-			var newStates = EvaluateGateStates( gate );
-			WriteState2( newStates[ 0 ], gate.dstNodeA );
-			WriteState2( newStates[ 1 ], gate.dstNodeB );
+			var newState = EvaluateGateState( gate );
+			ChangeNodeState( newState, gate.dstNodeA );
+			ChangeNodeState( newState, gate.dstNodeB );
 		}
 	}
 
-	// nodes
-	var dirtyNodeArrLen = gDirtyNodeArray.length;	
-	for ( var i = 0; i < dirtyNodeArrLen; ++i )
-	{
-		var nodeID 		= gDirtyNodeArray[ i ].currID;
-		var prevNodeID 	= gDirtyNodeArray[ i ].prevID;
-		
-		if ( gNodeArray[ nodeID ].constState >= 0 && gNodeArray[ nodeID ].state != gNodeArray[ nodeID ].constState )
-		{
-			gNodeArray[ nodeID ].state = 2;
-			prevNodeID = -1;
-		}
-
-		// right
-		if ( gNodeArray[ nodeID ].connRight && prevNodeID != nodeID + 1 )
-		{
-			WriteState( nodeID, nodeID + 1 );
-			gNodeArray[ nodeID ].connRightState = gNodeArray[ nodeID ].state;
-		}
-		
-		// down
-		if ( gNodeArray[ nodeID ].connDown && prevNodeID != nodeID + NODE_NUM_X )
-		{
-			WriteState( nodeID, nodeID + NODE_NUM_X );
-			gNodeArray[ nodeID ].connDownState = gNodeArray[ nodeID ].state;
-		}
-
-		// left
-		if ( nodeID > 0 && gNodeArray[ nodeID - 1 ].connRight && prevNodeID != nodeID - 1 )
-		{
-			WriteState( nodeID, nodeID - 1 );
-			gNodeArray[ nodeID - 1 ].connRightState = gNodeArray[ nodeID ].state;			
-		}
-
-		// up
-		if ( nodeID >= NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown && prevNodeID != nodeID - NODE_NUM_X )
-		{
-			WriteState( nodeID, nodeID - NODE_NUM_X );
-			gNodeArray[ nodeID - NODE_NUM_X ].connDownState = gNodeArray[ nodeID ].state;			
-		}
-
-		// gates
-		var gateArrLen = gGateArray.length;
-		for ( var j = 0; j < gateArrLen; ++j )
-		{
-			var gate = gGateArray[ j ];
-			if ( gate.srcNodeA == nodeID || gate.srcNodeB == nodeID )
-			{
-				var newStates = EvaluateGateStates( gate );
-				WriteState2( newStates[ 0 ], gate.dstNodeA );
-				WriteState2( newStates[ 1 ], gate.dstNodeB );
-			}
-		}
-	}
-	
-	gDirtyNodeArray = gDirtyNodeArray.slice( dirtyNodeArrLen );
 	gSimulator.currSubcycle += 1;
 }
 
@@ -589,16 +556,16 @@ var DrawTestBench = function()
 
 	if ( gGameState == GameStateEnum.VERIFY )
 	{
-		ctx.fillText( 'VERIFYING (cycle: ' + gSimulator.cycle + '/20 corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+		ctx.fillText( 'VERIFYING (cycle: ' + gSimulator.cycle + '/20 correctness: ' + gSimulator.score + '%)', posX, posY + 10 );
 	}
 	else if ( gGameState == GameStateEnum.DEBUG )
 	{
-		ctx.fillText( 'DEBUGGING (cycle: ' + gSimulator.cycle + '/20 corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+		ctx.fillText( 'DEBUGGING (cycle: ' + gSimulator.cycle + '/20 correctness: ' + gSimulator.score + '%)', posX, posY + 10 );
 	}
 	else if ( gLastVerRes == 0 )
 	{
 		ctx.fillStyle = 'red';
-		ctx.fillText( 'VERIFICATION FAILED (corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+		ctx.fillText( 'VERIFICATION FAILED (correctness: ' + gSimulator.score + '%)', posX, posY + 10 );
 	}
 	else if ( gLastVerRes == 1 )
 	{
@@ -786,7 +753,7 @@ var OnEdgeMouseDown = function( nodeX, nodeY, right )
 		}
 		else if ( gToolboxState == 1 && right && oldGateType != GateTypeEnum.NOT )
 		{
-			gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:nodeID, srcNodeB:-1, dstNodeA:nodeID+1, dstNodeB:-1, nodeX:nodeX, nodeY:nodeY } );
+			gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:nodeID, srcNodeB:nodeID, dstNodeA:nodeID+1, dstNodeB:-1, nodeX:nodeX, nodeY:nodeY } );
 			gNodeArray[ nodeID ].connRight = false;
 		}
 	}
@@ -816,12 +783,7 @@ var OnTileMouseDown = function( tileX, tileY )
 			if ( oldGateType != newGateType )
 			{
 				gGateArray.push( { type:newGateType, srcNodeA:tileID, srcNodeB:tileID+NODE_NUM_X, dstNodeA:tileID+1, dstNodeB:tileID+1+NODE_NUM_X, nodeX:tileX, nodeY:tileY } );
-				
-				if ( newGateType == GateTypeEnum.CROSS )
-				{
-					gGateArray.push( { type:newGateType, srcNodeA:tileID+1, srcNodeB:tileID+NODE_NUM_X+1, dstNodeA:tileID, dstNodeB:tileID+NODE_NUM_X, nodeX:tileX, nodeY:tileY } );
-				}
-				
+
 				gNodeArray[ tileID ].connDown = false;
 				gNodeArray[ tileID ].connRight = false;
 				gNodeArray[ tileID + 1 ].connDown = false;
