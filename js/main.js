@@ -21,6 +21,7 @@ var gCurrLevelID		= 0;
 var gUnlockedLevelID 	= 0;
 var gStateToColor 		= [ '#0000FF', '#FF0000', '#FF00FF' ];
 var gLastVerRes			= -1;
+var SHADOW_COLOR		= '#888888';
 
 var GameStateEnum =
 {
@@ -62,12 +63,12 @@ for ( var i = 0; i < 5; ++i )
 }
 
 var gEndLevelButtons = [];
-gEndLevelButtons.push( { posX:210, posY:340, width:80, height:30, text:'Next level' } );
-gEndLevelButtons.push( { posX:310, posY:340, width:80, height:30, text:'Restart level' } );
+gEndLevelButtons.push( { posX:210, posY:340, width:80, height:30, text:'NEXT' } );
+gEndLevelButtons.push( { posX:310, posY:340, width:80, height:30, text:'RESTART' } );
 
 var gQuestionButtons =[];
-gQuestionButtons.push( { posX:210, posY:340, width:80, height:30, text:'Yes' } );
-gQuestionButtons.push( { posX:310, posY:340, width:80, height:30, text:'No' } );
+gQuestionButtons.push( { posX:210, posY:340, width:80, height:30, text:'YES' } );
+gQuestionButtons.push( { posX:310, posY:340, width:80, height:30, text:'NO' } );
 
 var gMainMenuButtons = [];
 for ( var i = 0; i < gLevels.length; ++i )
@@ -376,7 +377,8 @@ var DrawPin = function( pin )
 var DrawDesign = function()
 {
 	DrawGrid();
-	DrawBList( gLevels[ gCurrLevelID ].bList, 10, 2, 'black', '#89C1B1' );
+	DrawBList( gLevels[ gCurrLevelID ].bList, 2, 10, 2, SHADOW_COLOR, SHADOW_COLOR );
+	DrawBList( gLevels[ gCurrLevelID ].bList, 0, 10, 2, 'black', '#89C1B1' );
 	
 	// draw cross markers
 	ctx.lineWidth	= 1;
@@ -508,7 +510,7 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 var DrawTestBench = function()
 {
 	var posX 	= 60;
-	var posY 	= 430;
+	var posY 	= 434;
 	var width 	= 16;
 	var height 	= 16;
 	
@@ -612,10 +614,10 @@ var DrawHUD = function()
 		}
 	}
 	
-	ctx.font		= '16px Arial';
+	ctx.font		= '12px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';	
-	ctx.fillText( gLevels[ gCurrLevelID ].name, 17, 29 );
+	ctx.fillText( gLevels[ gCurrLevelID ].name, 3, 11 );
 }
 
 var DrawDesc = function()
@@ -700,17 +702,20 @@ var DrawWindow = function( endLevel )
 var DrawMainMenu = function()
 {
 	DrawGrid();
+	DrawRoundedRect( 100 + 2, 125 + 2, 410, 310, 5, 2, SHADOW_COLOR, SHADOW_COLOR );	
 	DrawRoundedRect( 100, 125, 410, 310, 5, 2, 'black', '#89C1B1' );
 	
 	ctx.font			= 'bold 60px Arial';
-	ctx.fillStyle 		= 'black';
 	ctx.textAlign 		= 'center';	
 	ctx.textBaseline 	= 'middle';
+	ctx.fillStyle 		= SHADOW_COLOR;	
+	ctx.fillText( 'WAVEFORM', WIDTH * 0.5 + 2, 90 + 2 );
+	ctx.fillStyle 		= 'black';
 	ctx.fillText( 'WAVEFORM', WIDTH * 0.5, 90 );
 	
-	ctx.font = '12px Arial';
-	ctx.fillText( 'Select level', WIDTH * 0.5, 140 );
-	ctx.fillText( 'Completed: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 160 );
+	ctx.font = 'bold 14px Arial';
+	ctx.fillText( 'SELECT LEVEL', WIDTH * 0.5, 140 );
+	ctx.fillText( 'COMPLETED: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 160 );
 	
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )

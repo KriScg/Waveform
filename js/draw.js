@@ -100,6 +100,7 @@ var DrawCross = function( posX, posY )
 
 var DrawButton = function( button, focus, disabled, lineWidth )
 {
+	DrawRoundedRect( button.posX + 2, button.posY + 2, button.width, button.height, 5, lineWidth, SHADOW_COLOR, SHADOW_COLOR );
 	DrawRoundedRect( button.posX, button.posY, button.width, button.height, 5, lineWidth, focus ? '#FF0000' : '#000000', disabled ? '#72706E' : '#FCBC5F' );
 
 	ctx.font			= 'bold 12px Arial';
@@ -125,7 +126,7 @@ var DrawRoundedRect = function( x, y, width, height, radius, lineWidth, strokeSt
 	ctx.stroke();
 }
 
-var DrawBList = function( bList, radius, lineWidth, strokeStyle, fillStyle )
+var DrawBList = function( bList, offset, radius, lineWidth, strokeStyle, fillStyle )
 {
 	if ( bList == null || bList.length == 0 )
 	{
@@ -137,8 +138,8 @@ var DrawBList = function( bList, radius, lineWidth, strokeStyle, fillStyle )
 	ctx.fillStyle 	= fillStyle;
 	ctx.beginPath();
 	
-	var offX = GRID_OFF_X - 0.5 * TILE_W;
-	var offY = GRID_OFF_Y - 0.5 * TILE_H;
+	var offX = GRID_OFF_X - 0.5 * TILE_W + offset;
+	var offY = GRID_OFF_Y - 0.5 * TILE_H + offset;
 	ctx.moveTo( bList[ 0 ][ 0 ] * TILE_W + offX + radius, bList[ 0 ][ 1 ] * TILE_H + offY );
 	for ( var i = 0; i < bList.length; ++i )
 	{
