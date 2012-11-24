@@ -492,6 +492,44 @@ var gLevels =
 		]
 	},
 	{
+		name:'Clocked',
+		desc:'...',
+		toolboxStateMax:4,
+		nodes:
+		[
+			0, 0, 0, 0, 0, 0, 0, 0,
+			1, 1, 1, 1, 1, 1, 1, 0,
+			1, 1, 1, 1, 1, 1, 1, 0,
+			1, 1, 1, 1, 1, 1, 1, 0,
+			1, 1, 1, 1, 1, 1, 1, 0,
+			1, 1, 1, 1, 1, 1, 1, 0,
+			1, 1, 1, 1, 1, 1, 1, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+		],
+		pins:
+		[
+			{
+				name:'input C',
+				nodeX:0,
+				nodeY:3,
+				waveform:[ 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 ]
+			},
+			{
+				name:'input D',
+				nodeX:0,
+				nodeY:4,
+				waveform:[ 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1 ]
+			},			
+			{
+				name:'output', 
+				nodeX:6,
+				nodeY:3,
+				simWaveform:[],
+				waveform:[ 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 ]
+			},			
+		]
+	},
+	{
 		name:'TEST',
 		desc:'...',
 		toolboxStateMax:4,
