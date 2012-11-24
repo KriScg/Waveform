@@ -20,7 +20,6 @@ var gSimulator			= { cycle:0, subCycle:0, score:0 };
 var gCurrLevelID		= 0;
 var gUnlockedLevelID 	= 0;
 var gStateToColor 		= [ '#0000FF', '#FF0000', '#FF00FF' ];
-var gNodeBRect			= { minX:0, minY:0, maxX:0, maxY:0 };
 var gLastVerRes			= -1;
 
 var GameStateEnum =
@@ -116,13 +115,12 @@ var LoadLevel = function( levelID )
 {
 	gCurrLevelID = levelID;
 	var level = gLevels[ levelID ];
-	
+		
 	gGameState			= GameStateEnum.DESIGN;
 	gPins 				= level.pins;
 	gGateArray.length 	= 0;
 	gToolboxStateMax	= level.toolboxStateMax;
 
-	gNodeBRect = { minX:NODE_NUM_X, minY:NODE_NUM_Y, maxX:0, maxY:0 };
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
 		for ( var x = 0; x < NODE_NUM_X; ++x )
@@ -130,14 +128,6 @@ var LoadLevel = function( levelID )
 			var i = x + y * NODE_NUM_X;
 			var enabledNode = level.nodes[ i ] != 0;
 			gNodeArray[ i ] = { enabled:enabledNode, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
-			
-			if ( enabledNode )
-			{
-				gNodeBRect.minX = Math.min( gNodeBRect.minX, x );
-				gNodeBRect.minY = Math.min( gNodeBRect.minY, y );
-				gNodeBRect.maxX = Math.max( gNodeBRect.maxX, x );
-				gNodeBRect.maxY = Math.max( gNodeBRect.maxY, y );
-			}
 		}
 	}
 
@@ -386,14 +376,35 @@ var DrawPin = function( pin )
 var DrawDesign = function()
 {
 	DrawGrid();
-	DrawRoundedRect( GRID_OFF_X + ( gNodeBRect.minX - 0.5 ) * TILE_W, GRID_OFF_Y + ( gNodeBRect.minY - 0.5 ) * TILE_H, ( gNodeBRect.maxX - gNodeBRect.minX + 1 ) * TILE_W, ( gNodeBRect.maxY - gNodeBRect.minY + 1 ) * TILE_H, 10, 2, 'black', '#89C1B1' );
-	DrawCrossGrid( GRID_OFF_X, GRID_OFF_Y, gNodeBRect.minX, gNodeBRect.minY, gNodeBRect.maxX, gNodeBRect.maxY );
+	DrawBList( gLevels[ gCurrLevelID ].bList, 10, 2, 'black', '#89C1B1' );
+	
+	// draw cross markers
+	ctx.lineWidth	= 1;
+	ctx.strokeStyle	= '#75A596'
+	ctx.beginPath();	
+	for ( var y = 0; y < NODE_NUM_Y; ++y )
+	{
+		for ( var x = 0; x < NODE_NUM_X; ++x )
+		{
+			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled )
+			{
+				var size = 8;
+
+				ctx.moveTo( GRID_OFF_X + x * TILE_W + 0.5, GRID_OFF_Y + y * TILE_H - size + 0.5 );
+				ctx.lineTo( GRID_OFF_X + x * TILE_W + 0.5, GRID_OFF_Y + y * TILE_H + size + 0.5 );
+
+				ctx.moveTo( GRID_OFF_X + x * TILE_W - size + 0.5, GRID_OFF_Y + y * TILE_H + 0.5 );
+				ctx.lineTo( GRID_OFF_X + x * TILE_W + size + 0.5, GRID_OFF_Y + y * TILE_H + 0.5 );
+			}
+		}
+	}
+	ctx.stroke();	
 	
 	var pinArrLen = gPins.length;
 	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
 	{
 		DrawPin( gPins[ iPin ] );
-	}	
+	}
 
 	// draw connections
 	ctx.strokeStyle = '#FFDD00';
@@ -826,8 +837,8 @@ document.onkeydown = function( e )
 var gCurrHintID = -1;
 var gHints =
 [
-	'PATH - use it to connect adjacent nodes (horizontally or vertically). Keyboard shortcut - "1".',
-	'NOT - use it to negate signal. Keyboard shortcut - "2".',
+	'PATH - use it to connect or disconnect adjacent nodes (horizontally or vertically). Keyboard shortcut - "1".',
+	'NOT - use it to negate signal. Can be placed only horizontally. Keyboard shortcut - "2".',
 	'OR - produces HI signal if any of it\'s inputs are HI. Keyboard shortcut - "3".',
 	'AND - It produces HI signal only if both inputs are HI. Keyboard shortcut - "4".',
 	'CROSS - allows to intesect signal paths. Keyboard shortcut - "5".',
