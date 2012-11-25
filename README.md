@@ -4,6 +4,12 @@ Waveform is an engineering puzzle game. Every level's goal is to **clone** provi
 ## Status
 Playable.
 
+## Tech
+Javascript and 2D HTML5 Canvas.
+
+## Compatibility
+Works fine on Chrome and Firefox.
+
 ## Gameplay (2nd level walkthrough)
 
 1. ![](https://raw.github.com/KriScg/Waveform/master/readme/initial.png)  
@@ -14,9 +20,3 @@ Playable.
 
 3. ![](https://raw.github.com/KriScg/Waveform/master/readme/invert.png)   
     Negating the signal and finishing level.
-
-## Tech
-Javascript and 2D HTML5 Canvas.
-
-## Compatibility
-Works fine on Chrome and Firefox.
