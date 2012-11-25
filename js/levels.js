@@ -382,7 +382,7 @@ var gLevels =
 	},
 	{
 		name:'Crossing',
-		desc:'Use CROSS gate to intersect signal path.\'s.',
+		desc:'Use CROSS gate to intersect signal path\'s.',
 		toolboxStateMax:4,
 		nodes:
 		[
