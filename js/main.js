@@ -78,7 +78,7 @@ for ( var i = 0; i < gLevels.length; ++i )
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
-	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:180 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:22 } );
+	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:220 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:22 } );
 }
 
 var SimulateReset = function()
@@ -702,20 +702,20 @@ var DrawWindow = function( endLevel )
 var DrawMainMenu = function()
 {
 	DrawGrid();
-	DrawRoundedRect( 100 + 2, 125 + 2, 410, 310, 5, 2, SHADOW_COLOR, SHADOW_COLOR );	
-	DrawRoundedRect( 100, 125, 410, 310, 5, 2, 'black', '#89C1B1' );
+	DrawRoundedRect( 100 + 2, 165 + 2, 410, 310, 5, 2, SHADOW_COLOR, SHADOW_COLOR );	
+	DrawRoundedRect( 100, 165, 410, 310, 5, 2, 'black', '#89C1B1' );
 	
 	ctx.font			= 'bold 60px Arial';
 	ctx.textAlign 		= 'center';	
 	ctx.textBaseline 	= 'middle';
 	ctx.fillStyle 		= SHADOW_COLOR;	
-	ctx.fillText( 'WAVEFORM', WIDTH * 0.5 + 2, 90 + 2 );
+	ctx.fillText( 'WAVEFORM', WIDTH * 0.5 + 5 + 2, 130 + 2 );
 	ctx.fillStyle 		= 'black';
-	ctx.fillText( 'WAVEFORM', WIDTH * 0.5, 90 );
+	ctx.fillText( 'WAVEFORM', WIDTH * 0.5 + 5, 130 );
 	
 	ctx.font = 'bold 14px Arial';
-	ctx.fillText( 'SELECT LEVEL', WIDTH * 0.5, 140 );
-	ctx.fillText( 'COMPLETED: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 160 );
+	ctx.fillText( 'SELECT LEVEL', WIDTH * 0.5, 180 );
+	ctx.fillText( 'COMPLETED: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 200 );
 	
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )
@@ -1047,7 +1047,7 @@ var InitGame = function()
 		gUnlockedLevelID = parseInt( value );
 	}
 	LoadLevel( 0 );
-	gGameState = GameStateEnum.DESIGN;
+	gGameState = GameStateEnum.MAIN_MENU;
 }
 
 var DrawGame = function()
