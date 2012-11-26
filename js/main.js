@@ -154,7 +154,7 @@ var Verify = function()
 				gLastVerRes = 1;
 				gUnlockedLevelID = Math.max( gUnlockedLevelID, gCurrLevelID + 1 );
 				gGameState = GameStateEnum.END_LEVEL;
-				//localStorage.setItem( 'UnlockedLevelID', gUnlockedLevelID.toString() );
+				localStorage.setItem( 'ULID', gUnlockedLevelID.toString() );
 			}
 			else
 			{
@@ -304,21 +304,19 @@ var ChangeNodeState = function( newState, dstNodeID )
 
 var SimulateSubCycle = function()
 {
-	// inject inputs
-	if ( gSimulator.subCycle == 0 )
+	// inputs
+	var pinArrLen = gPins.length;
+	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
 	{
-		var pinArrLen = gPins.length;
-		for ( var iPin = 0; iPin < pinArrLen; ++iPin )
+		var pin = gPins[ iPin ];
+		if ( !pin.simWaveform )
 		{
-			var pin = gPins[ iPin ];
-			if ( !pin.simWaveform )
-			{
-				var inputNodeID = pin.nodeX + pin.nodeY * NODE_NUM_X;
-				ChangeNodeState( pin.waveform[ gSimulator.cycle ], inputNodeID );			
-			}
+			var inputNodeID = pin.nodeX + pin.nodeY * NODE_NUM_X;
+			ChangeNodeState( pin.waveform[ gSimulator.cycle ], inputNodeID );			
 		}
 	}
 
+	// gates
 	var gateArrLen = gGateArray.length;
 	for ( var j = 0; j < gateArrLen; ++j )
 	{
@@ -826,13 +824,11 @@ document.onkeydown = function( e )
 	}
 	else if ( e.keyCode == 87 && gCurrLevelID + 1 < gLevels.length )
 	{
-		// tempshit debug
-		LoadLevel( gCurrLevelID + 1 );
+		//LoadLevel( gCurrLevelID + 1 );
 	}
 	else if ( e.keyCode == 81 && gCurrLevelID > 0 )
 	{
-		// tempshit debug
-		LoadLevel( gCurrLevelID - 1 );
+		//LoadLevel( gCurrLevelID - 1 );
 	}	
 	
 	
@@ -1041,7 +1037,7 @@ c.onmousedown = function( e )
 
 var InitGame = function()
 {
-	var value = localStorage.getItem( 'UnlockedLevelID' );
+	var value = localStorage.getItem( 'ULID' );
 	if ( value )
 	{
 		gUnlockedLevelID = parseInt( value );
