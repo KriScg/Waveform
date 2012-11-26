@@ -100,6 +100,7 @@ var DrawCross = function( posX, posY )
 
 var DrawButton = function( button, focus, disabled, lineWidth )
 {
+	DrawRoundedRect( button.posX + 2, button.posY + 2, button.width, button.height, 5, lineWidth, SHADOW_COLOR, SHADOW_COLOR );
 	DrawRoundedRect( button.posX, button.posY, button.width, button.height, 5, lineWidth, focus ? '#FF0000' : '#000000', disabled ? '#72706E' : '#FCBC5F' );
 
 	ctx.font			= 'bold 12px Arial';
@@ -120,6 +121,45 @@ var DrawRoundedRect = function( x, y, width, height, radius, lineWidth, strokeSt
 	ctx.arcTo(x+width,y+height,x+width-radius,y+height,radius); 
 	ctx.arcTo(x,y+height,x,y+height-radius,radius);
 	ctx.arcTo(x,y,x+radius,y,radius);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+}
+
+var DrawBList = function( bList, offset, radius, lineWidth, strokeStyle, fillStyle )
+{
+	if ( bList == null || bList.length == 0 )
+	{
+		return;
+	}
+
+	ctx.lineWidth	= lineWidth;
+	ctx.strokeStyle	= strokeStyle;
+	ctx.fillStyle 	= fillStyle;
+	ctx.beginPath();
+	
+	var offX = GRID_OFF_X - 0.5 * TILE_W + offset;
+	var offY = GRID_OFF_Y - 0.5 * TILE_H + offset;
+	ctx.moveTo( bList[ 0 ][ 0 ] * TILE_W + offX + radius, bList[ 0 ][ 1 ] * TILE_H + offY );
+	for ( var i = 0; i < bList.length; ++i )
+	{
+		var px0 = bList[ ( i + 1 ) % bList.length ][ 0 ] * TILE_W + offX;
+		var py0 = bList[ ( i + 1 ) % bList.length ][ 1 ] * TILE_H + offY;
+		var px1 = bList[ ( i + 2 ) % bList.length ][ 0 ] * TILE_W + offX;
+		var py1 = bList[ ( i + 2 ) % bList.length ][ 1 ] * TILE_H + offY;
+		var px2 = px0;
+		var py2 = py0;
+		if ( px0 != px1 )
+		{
+			px2	+= px0 < px1 ? radius : -radius;
+		}
+		else
+		{
+			py2	+= py0 < py1 ? radius : -radius;
+		}
+		ctx.arcTo( px0, py0, px2, py2, radius );
+	}
+
 	ctx.closePath();
 	ctx.fill();
 	ctx.stroke();
@@ -150,27 +190,6 @@ var DrawGrid = function()
 		ctx.lineTo( 0.5 + i * TILE_W * 0.5, HEIGHT + 0.5 );
 	}
 	ctx.closePath();
-	ctx.stroke();
-}
-
-var DrawCrossGrid = function( posX, posY, nodeMinX, nodeMinY, nodeMaxX, nodeMaxY )
-{
-	ctx.lineWidth	= 1;
-	ctx.strokeStyle	= '#75A596'
-	ctx.beginPath();	
-	for ( var y = nodeMinY; y < nodeMaxY + 1; ++y )
-	{
-		for ( var x = nodeMinX; x < nodeMaxX + 1; ++x )
-		{
-			var size = 8;
-
-			ctx.moveTo( posX + x * TILE_W + 0.5, posY + y * TILE_H - size + 0.5 );
-			ctx.lineTo( posX + x * TILE_W + 0.5, posY + y * TILE_H + size + 0.5 );
-
-			ctx.moveTo( posX + x * TILE_W - size + 0.5, posY + y * TILE_H + 0.5 );
-			ctx.lineTo( posX + x * TILE_W + size + 0.5, posY + y * TILE_H + 0.5 );
-		}
-	}
 	ctx.stroke();
 }
 

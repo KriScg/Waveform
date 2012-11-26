@@ -15,14 +15,13 @@ var WIDTH 				= 600,
 	c.height 			= HEIGHT;
 var gNodeArray 			= [];
 var gGateArray			= [];
-var gDirtyNodeArray		= [];
 var gPins				= [];
 var gSimulator			= { cycle:0, subCycle:0, score:0 };
 var gCurrLevelID		= 0;
 var gUnlockedLevelID 	= 0;
 var gStateToColor 		= [ '#0000FF', '#FF0000', '#FF00FF' ];
-var gNodeBRect			= { minX:0, minY:0, maxX:0, maxY:0 };
 var gLastVerRes			= -1;
+var SHADOW_COLOR		= '#888888';
 
 var GameStateEnum =
 {
@@ -64,12 +63,12 @@ for ( var i = 0; i < 5; ++i )
 }
 
 var gEndLevelButtons = [];
-gEndLevelButtons.push( { posX:210, posY:340, width:80, height:30, text:'Next level' } );
-gEndLevelButtons.push( { posX:310, posY:340, width:80, height:30, text:'Restart level' } );
+gEndLevelButtons.push( { posX:210, posY:340, width:80, height:30, text:'NEXT' } );
+gEndLevelButtons.push( { posX:310, posY:340, width:80, height:30, text:'RESTART' } );
 
 var gQuestionButtons =[];
-gQuestionButtons.push( { posX:210, posY:340, width:80, height:30, text:'Yes' } );
-gQuestionButtons.push( { posX:310, posY:340, width:80, height:30, text:'No' } );
+gQuestionButtons.push( { posX:210, posY:340, width:80, height:30, text:'YES' } );
+gQuestionButtons.push( { posX:310, posY:340, width:80, height:30, text:'NO' } );
 
 var gMainMenuButtons = [];
 for ( var i = 0; i < gLevels.length; ++i )
@@ -79,7 +78,7 @@ for ( var i = 0; i < gLevels.length; ++i )
 	var offset	= 10;
 	var offsetX = btnW + offset;
 	var offsetY = btnH + offset;
-	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:180 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:22 } );
+	gMainMenuButtons.push( { posX:115 + ( i % 3 ) * offsetX, posY:210 + Math.floor( i / 3 ) * offsetY, width:btnW, height:btnH, text:gLevels[ i ].name, textOffX:22 } );
 }
 
 var SimulateReset = function()
@@ -87,7 +86,6 @@ var SimulateReset = function()
 	gSimulator.cycle 		= 0;
 	gSimulator.score		= 0;
 	gSimulator.subCycle 	= 0;
-	gDirtyNodeArray.length	= 0;
 	gLastVerRes				= -1;
 	
 	var pinArrLen = gPins.length;
@@ -118,13 +116,12 @@ var LoadLevel = function( levelID )
 {
 	gCurrLevelID = levelID;
 	var level = gLevels[ levelID ];
-	
+		
 	gGameState			= GameStateEnum.DESIGN;
 	gPins 				= level.pins;
 	gGateArray.length 	= 0;
 	gToolboxStateMax	= level.toolboxStateMax;
 
-	gNodeBRect = { minX:NODE_NUM_X, minY:NODE_NUM_Y, maxX:0, maxY:0 };
 	for ( var y = 0; y < NODE_NUM_Y; ++y )
 	{
 		for ( var x = 0; x < NODE_NUM_X; ++x )
@@ -132,14 +129,6 @@ var LoadLevel = function( levelID )
 			var i = x + y * NODE_NUM_X;
 			var enabledNode = level.nodes[ i ] != 0;
 			gNodeArray[ i ] = { enabled:enabledNode, connDown:false, connRight:false, connDownState:0, connRightState:0, state:0 };
-			
-			if ( enabledNode )
-			{
-				gNodeBRect.minX = Math.min( gNodeBRect.minX, x );
-				gNodeBRect.minY = Math.min( gNodeBRect.minY, y );
-				gNodeBRect.maxX = Math.max( gNodeBRect.maxX, x );
-				gNodeBRect.maxY = Math.max( gNodeBRect.maxY, y );
-			}
 		}
 	}
 
@@ -165,7 +154,7 @@ var Verify = function()
 				gLastVerRes = 1;
 				gUnlockedLevelID = Math.max( gUnlockedLevelID, gCurrLevelID + 1 );
 				gGameState = GameStateEnum.END_LEVEL;
-				//localStorage.setItem( 'UnlockedLevelID', gUnlockedLevelID.toString() );
+				localStorage.setItem( 'ULID', gUnlockedLevelID.toString() );
 			}
 			else
 			{
@@ -179,10 +168,12 @@ var Verify = function()
 
 var SimulateCycle = function()
 {
+	//gSimulator.cycle = 0;
+	gSimulator.subCycle = 0;
 	for ( var i = 0; i < SUBCYCLE_NUM; ++i )
 	{
-		gSimulator.subCycle = i;
 		SimulateSubCycle();
+		++gSimulator.subCycle;
 	}
 
 	// update outputs
@@ -211,48 +202,94 @@ var SimulateCycle = function()
 	gSimulator.score = Math.round( ( correctEntryNum * 100 ) / entryNum );
 }
 
-var EvaluateGateStates = function( gate )
+var EvaluateGateState = function( gate )
 {
-	var newStateA 	= 0;
-	var newStateB 	= 0;
-	var stateA 		= gate.srcNodeA != -1 ? gNodeArray[ gate.srcNodeA ].state : 2;
-	var stateB 		= gate.srcNodeB != -1 ? gNodeArray[ gate.srcNodeB ].state : 2;
+	var truthTable = [ 
+		// NOT
+		[ 	1, 0, 2,
+			0, 0, 2,
+			2, 2, 2 ],
+		// OR
+		[ 	0, 1, 2,
+			1, 1, 1,
+			2, 1, 2 ],
+		// AND
+		[ 	0, 0, 0,
+			0, 1, 2,
+			0, 2, 2 ] ];
 
-	switch ( gate.type )
-	{
-		case GateTypeEnum.NOT: 		newStateA = newStateB = stateA == 1 ? 0 : 1; break;
-		case GateTypeEnum.AND: 		newStateA = newStateB = stateA == 1 && stateB == 1 ? 1 : 0; break;
-		case GateTypeEnum.OR: 		newStateA = newStateB = stateA == 1 || stateB == 1 ? 1 : 0; break;
-		case GateTypeEnum.CROSS: 	newStateA = stateB; newStateB = stateA; break;
-	}
-
-	if ( stateA == 2 || ( stateB == 2 && gate.type != GateTypeEnum.NOT ) )
-	{
-		newStateA = 2;
-		newStateB = 2;
-	}	
-
-	return [ newStateA, newStateB ];
+	var stateA = gNodeArray[ gate.srcNodeA ].state;
+	var stateB = gNodeArray[ gate.srcNodeB ].state;			
+	var newState = truthTable[ gate.type ][ stateA + stateB * 3 ];
+	return newState;
 }
 
-var WriteState = function( srcNodeID, dstNodeID )
+var PushSignal = function( startNodeID, state )
 {
-	if ( gNodeArray[ dstNodeID ].state != gNodeArray[ srcNodeID ].state )
+	var dirtyNodes = [ startNodeID ];
+	
+	while ( dirtyNodes.length > 0 )
 	{
-		if ( gSimulator.subCycle < SUBCYCLE_STABLE_NUM )
+		var nodeID = dirtyNodes[ 0 ];
+		dirtyNodes.shift();
+		gNodeArray[ nodeID ].state = state;
+
+		// right
+		if ( gNodeArray[ nodeID ].connRight && gNodeArray[ nodeID ].state != gNodeArray[ nodeID + 1 ].state )
 		{
-			gDirtyNodeArray.push( { currID:dstNodeID, prevID:srcNodeID } );
-			gNodeArray[ dstNodeID ].state = gNodeArray[ srcNodeID ].state;
+			gNodeArray[ nodeID ].connRightState = state;
+			dirtyNodes.push( nodeID + 1 );
 		}
-		else
+		
+		// down
+		if ( gNodeArray[ nodeID ].connDown && gNodeArray[ nodeID ].state != gNodeArray[ nodeID + NODE_NUM_X ].state )
 		{
-			gDirtyNodeArray.push( { currID:dstNodeID, prevID:-1 } );
-			gNodeArray[ dstNodeID ].state = 2;
+			gNodeArray[ nodeID ].connDownState = state;
+			dirtyNodes.push( nodeID + NODE_NUM_X );
+		}
+
+		// left
+		if ( nodeID > 0 && gNodeArray[ nodeID - 1 ].connRight && gNodeArray[ nodeID ].state != gNodeArray[ nodeID - 1 ].state )
+		{
+			gNodeArray[ nodeID - 1 ].connRightState = state;
+			dirtyNodes.push( nodeID - 1 );
+		}
+
+		// up
+		if ( nodeID >= NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown && gNodeArray[ nodeID ].state != gNodeArray[ nodeID - NODE_NUM_X ].state )
+		{
+			gNodeArray[ nodeID - NODE_NUM_X ].connDownState = state;			
+			dirtyNodes.push( nodeID - NODE_NUM_X );
+		}
+		
+		var gateArrLen = gGateArray.length;
+		for ( var j = 0; j < gateArrLen; ++j )
+		{
+			var gate = gGateArray[ j ];
+			if ( gate.type == GateTypeEnum.CROSS )
+			{
+				if ( gate.srcNodeA == nodeID && gNodeArray[ gate.dstNodeB ].state != state )
+				{
+					dirtyNodes.push( gate.dstNodeB );
+				}
+				else if ( gate.srcNodeB == nodeID && gNodeArray[ gate.dstNodeA ].state != state )
+				{
+					dirtyNodes.push( gate.dstNodeA );
+				}
+				else if ( gate.dstNodeA == nodeID && gNodeArray[ gate.srcNodeB ].state != state )
+				{
+					dirtyNodes.push( gate.srcNodeB );
+				}
+				else if ( gate.dstNodeB == nodeID && gNodeArray[ gate.srcNodeA ].state != state )
+				{
+					dirtyNodes.push( gate.srcNodeA );
+				}
+			}
 		}
 	}
 }
 
-var WriteState2 = function( newState, dstNodeID )
+var ChangeNodeState = function( newState, dstNodeID )
 {
 	if ( dstNodeID != -1 && gNodeArray[ dstNodeID ].state != newState )
 	{
@@ -260,119 +297,38 @@ var WriteState2 = function( newState, dstNodeID )
 		{
 			newState = 2;
 		}
-		gNodeArray[ dstNodeID ].state = newState;
-		gDirtyNodeArray.push( { currID:dstNodeID, prevID:-1 } );
+		
+		PushSignal( dstNodeID, newState );
 	}
 }
 
 var SimulateSubCycle = function()
 {
-	// inject inputs
-	if ( gSimulator.subCycle == 0 )
+	// inputs
+	var pinArrLen = gPins.length;
+	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
 	{
-		var pinArrLen = gPins.length;
-		for ( var iPin = 0; iPin < pinArrLen; ++iPin )
+		var pin = gPins[ iPin ];
+		if ( !pin.simWaveform )
 		{
-			var pin = gPins[ iPin ];
-			if ( !pin.simWaveform )
-			{
-				var inputNodeID = pin.nodeX + pin.nodeY * NODE_NUM_X;
-				gNodeArray[ inputNodeID ].state = pin.waveform[ gSimulator.cycle ];
-				gDirtyNodeArray.push( { currID:inputNodeID, prevID:-1 } );
-			}
-		}
-		
-		var gateArrLen = gGateArray.length;
-		for ( var j = 0; j < gateArrLen; ++j )
-		{
-			var gate = gGateArray[ j ];
-			var newStates = EvaluateGateStates( gate );
-			WriteState2( newStates[ 0 ], gate.dstNodeA );
-			WriteState2( newStates[ 1 ], gate.dstNodeB );
-		}
-	}
-
-	// verify gate and input conditions
-	if ( gSimulator.subCycle == SUBCYCLE_STABLE_NUM )
-	{
-		var pinArrLen = gPins.length;
-		for ( var iPin = 0; iPin < pinArrLen; ++iPin )
-		{
-			var pin = gPins[ iPin ];
 			var inputNodeID = pin.nodeX + pin.nodeY * NODE_NUM_X;
-			if ( !pin.simWaveform && gNodeArray[ inputNodeID ].state != pin.waveform[ gSimulator.cycle ] )
-			{
-				gNodeArray[ inputNodeID ].state = 2;
-				gDirtyNodeArray.push( { currID:inputNodeID, prevID:-1 } );
-			}
-		}
-
-		var gateArrLen = gGateArray.length;
-		for ( var j = 0; j < gateArrLen; ++j )
-		{
-			var gate = gGateArray[ j ];
-			var newStates = EvaluateGateStates( gate );
-			WriteState2( newStates[ 0 ], gate.dstNodeA );
-			WriteState2( newStates[ 1 ], gate.dstNodeB );
+			ChangeNodeState( pin.waveform[ gSimulator.cycle ], inputNodeID );			
 		}
 	}
 
-	// nodes
-	var dirtyNodeArrLen = gDirtyNodeArray.length;	
-	for ( var i = 0; i < dirtyNodeArrLen; ++i )
+	// gates
+	var gateArrLen = gGateArray.length;
+	for ( var j = 0; j < gateArrLen; ++j )
 	{
-		var nodeID 		= gDirtyNodeArray[ i ].currID;
-		var prevNodeID 	= gDirtyNodeArray[ i ].prevID;
-		
-		if ( gNodeArray[ nodeID ].constState >= 0 && gNodeArray[ nodeID ].state != gNodeArray[ nodeID ].constState )
+		var gate = gGateArray[ j ];
+		if ( gate.type != GateTypeEnum.CROSS )
 		{
-			gNodeArray[ nodeID ].state = 2;
-			prevNodeID = -1;
-		}
-
-		// right
-		if ( gNodeArray[ nodeID ].connRight && prevNodeID != nodeID + 1 )
-		{
-			WriteState( nodeID, nodeID + 1 );
-			gNodeArray[ nodeID ].connRightState = gNodeArray[ nodeID ].state;
-		}
-		
-		// down
-		if ( gNodeArray[ nodeID ].connDown && prevNodeID != nodeID + NODE_NUM_X )
-		{
-			WriteState( nodeID, nodeID + NODE_NUM_X );
-			gNodeArray[ nodeID ].connDownState = gNodeArray[ nodeID ].state;
-		}
-
-		// left
-		if ( nodeID > 0 && gNodeArray[ nodeID - 1 ].connRight && prevNodeID != nodeID - 1 )
-		{
-			WriteState( nodeID, nodeID - 1 );
-			gNodeArray[ nodeID - 1 ].connRightState = gNodeArray[ nodeID ].state;			
-		}
-
-		// up
-		if ( nodeID > NODE_NUM_X && gNodeArray[ nodeID - NODE_NUM_X ].connDown && prevNodeID != nodeID - NODE_NUM_X )
-		{
-			WriteState( nodeID, nodeID - NODE_NUM_X );
-			gNodeArray[ nodeID - NODE_NUM_X ].connDownState = gNodeArray[ nodeID ].state;			
-		}
-
-		// gates
-		var gateArrLen = gGateArray.length;
-		for ( var j = 0; j < gateArrLen; ++j )
-		{
-			var gate = gGateArray[ j ];
-			if ( gate.srcNodeA == nodeID || gate.srcNodeB == nodeID )
-			{
-				var newStates = EvaluateGateStates( gate );
-				WriteState2( newStates[ 0 ], gate.dstNodeA );
-				WriteState2( newStates[ 1 ], gate.dstNodeB );
-			}
+			var newState = EvaluateGateState( gate );
+			ChangeNodeState( newState, gate.dstNodeA );
+			ChangeNodeState( newState, gate.dstNodeB );
 		}
 	}
-	
-	gDirtyNodeArray = gDirtyNodeArray.slice( dirtyNodeArrLen );
+
 	gSimulator.currSubcycle += 1;
 }
 
@@ -419,14 +375,36 @@ var DrawPin = function( pin )
 var DrawDesign = function()
 {
 	DrawGrid();
-	DrawRoundedRect( GRID_OFF_X + ( gNodeBRect.minX - 0.5 ) * TILE_W, GRID_OFF_Y + ( gNodeBRect.minY - 0.5 ) * TILE_H, ( gNodeBRect.maxX - gNodeBRect.minX + 1 ) * TILE_W, ( gNodeBRect.maxY - gNodeBRect.minY + 1 ) * TILE_H, 10, 2, 'black', '#89C1B1' );
-	DrawCrossGrid( GRID_OFF_X, GRID_OFF_Y, gNodeBRect.minX, gNodeBRect.minY, gNodeBRect.maxX, gNodeBRect.maxY );
+	DrawBList( gLevels[ gCurrLevelID ].bList, 2, 10, 2, SHADOW_COLOR, SHADOW_COLOR );
+	DrawBList( gLevels[ gCurrLevelID ].bList, 0, 10, 2, 'black', '#89C1B1' );
+	
+	// draw cross markers
+	ctx.lineWidth	= 1;
+	ctx.strokeStyle	= '#75A596'
+	ctx.beginPath();	
+	for ( var y = 0; y < NODE_NUM_Y; ++y )
+	{
+		for ( var x = 0; x < NODE_NUM_X; ++x )
+		{
+			if ( gNodeArray[ x + y * NODE_NUM_X ].enabled )
+			{
+				var size = 8;
+
+				ctx.moveTo( GRID_OFF_X + x * TILE_W + 0.5, GRID_OFF_Y + y * TILE_H - size + 0.5 );
+				ctx.lineTo( GRID_OFF_X + x * TILE_W + 0.5, GRID_OFF_Y + y * TILE_H + size + 0.5 );
+
+				ctx.moveTo( GRID_OFF_X + x * TILE_W - size + 0.5, GRID_OFF_Y + y * TILE_H + 0.5 );
+				ctx.lineTo( GRID_OFF_X + x * TILE_W + size + 0.5, GRID_OFF_Y + y * TILE_H + 0.5 );
+			}
+		}
+	}
+	ctx.stroke();	
 	
 	var pinArrLen = gPins.length;
 	for ( var iPin = 0; iPin < pinArrLen; ++iPin )
 	{
 		DrawPin( gPins[ iPin ] );
-	}	
+	}
 
 	// draw connections
 	ctx.strokeStyle = '#FFDD00';
@@ -530,7 +508,7 @@ var DrawWaveform = function( posX, posY, width, height, text, waveform, overlay 
 var DrawTestBench = function()
 {
 	var posX 	= 60;
-	var posY 	= 430;
+	var posY 	= 434;
 	var width 	= 16;
 	var height 	= 16;
 	
@@ -589,16 +567,16 @@ var DrawTestBench = function()
 
 	if ( gGameState == GameStateEnum.VERIFY )
 	{
-		ctx.fillText( 'VERIFYING (cycle: ' + gSimulator.cycle + '/20 corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+		ctx.fillText( 'VERIFYING (cycle: ' + gSimulator.cycle + '/20 correctness: ' + gSimulator.score + '%)', posX, posY + 10 );
 	}
 	else if ( gGameState == GameStateEnum.DEBUG )
 	{
-		ctx.fillText( 'DEBUGGING (cycle: ' + gSimulator.cycle + '/20 corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+		ctx.fillText( 'DEBUGGING (cycle: ' + gSimulator.cycle + '/20 correctness: ' + gSimulator.score + '%)', posX, posY + 10 );
 	}
 	else if ( gLastVerRes == 0 )
 	{
 		ctx.fillStyle = 'red';
-		ctx.fillText( 'VERIFICATION FAILED (corectness: ' + gSimulator.score + '%)', posX, posY + 10 );
+		ctx.fillText( 'VERIFICATION FAILED (correctness: ' + gSimulator.score + '%)', posX, posY + 10 );
 	}
 	else if ( gLastVerRes == 1 )
 	{
@@ -634,10 +612,10 @@ var DrawHUD = function()
 		}
 	}
 	
-	ctx.font		= '16px Arial';
+	ctx.font		= '12px Arial';
 	ctx.fillStyle 	= 'black';
 	ctx.textAlign 	= 'left';	
-	ctx.fillText( gLevels[ gCurrLevelID ].name, 17, 29 );
+	ctx.fillText( gLevels[ gCurrLevelID ].name, 3, 11 );
 }
 
 var DrawDesc = function()
@@ -722,17 +700,20 @@ var DrawWindow = function( endLevel )
 var DrawMainMenu = function()
 {
 	DrawGrid();
-	DrawRoundedRect( 100, 125, 410, 310, 5, 2, 'black', '#89C1B1' );
+	DrawRoundedRect( 100 + 2, 155 + 2, 410, 310, 5, 2, SHADOW_COLOR, SHADOW_COLOR );	
+	DrawRoundedRect( 100, 155, 410, 310, 5, 2, 'black', '#89C1B1' );
 	
 	ctx.font			= 'bold 60px Arial';
-	ctx.fillStyle 		= 'black';
 	ctx.textAlign 		= 'center';	
 	ctx.textBaseline 	= 'middle';
-	ctx.fillText( 'WAVEFORM', WIDTH * 0.5, 90 );
+	ctx.fillStyle 		= SHADOW_COLOR;	
+	ctx.fillText( 'WAVEFORM', WIDTH * 0.5 + 5 + 2, 120 + 2 );
+	ctx.fillStyle 		= 'black';
+	ctx.fillText( 'WAVEFORM', WIDTH * 0.5 + 5, 120 );
 	
-	ctx.font = '12px Arial';
-	ctx.fillText( 'Select level', WIDTH * 0.5, 140 );
-	ctx.fillText( 'Completed: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 160 );
+	ctx.font = 'bold 14px Arial';
+	ctx.fillText( 'SELECT LEVEL', WIDTH * 0.5, 170 );
+	ctx.fillText( 'COMPLETED: ' + gUnlockedLevelID + '/' + gLevels.length, WIDTH * 0.5, 190 );
 	
 	var len = gMainMenuButtons.length;
 	for ( var i = 0; i < len; ++i )
@@ -786,7 +767,7 @@ var OnEdgeMouseDown = function( nodeX, nodeY, right )
 		}
 		else if ( gToolboxState == 1 && right && oldGateType != GateTypeEnum.NOT )
 		{
-			gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:nodeID, srcNodeB:-1, dstNodeA:nodeID+1, dstNodeB:-1, nodeX:nodeX, nodeY:nodeY } );
+			gGateArray.push( { type:GateTypeEnum.NOT, srcNodeA:nodeID, srcNodeB:nodeID, dstNodeA:nodeID+1, dstNodeB:-1, nodeX:nodeX, nodeY:nodeY } );
 			gNodeArray[ nodeID ].connRight = false;
 		}
 	}
@@ -816,12 +797,7 @@ var OnTileMouseDown = function( tileX, tileY )
 			if ( oldGateType != newGateType )
 			{
 				gGateArray.push( { type:newGateType, srcNodeA:tileID, srcNodeB:tileID+NODE_NUM_X, dstNodeA:tileID+1, dstNodeB:tileID+1+NODE_NUM_X, nodeX:tileX, nodeY:tileY } );
-				
-				if ( newGateType == GateTypeEnum.CROSS )
-				{
-					gGateArray.push( { type:newGateType, srcNodeA:tileID+1, srcNodeB:tileID+NODE_NUM_X+1, dstNodeA:tileID, dstNodeB:tileID+NODE_NUM_X, nodeX:tileX, nodeY:tileY } );
-				}
-				
+
 				gNodeArray[ tileID ].connDown = false;
 				gNodeArray[ tileID ].connRight = false;
 				gNodeArray[ tileID + 1 ].connDown = false;
@@ -848,13 +824,11 @@ document.onkeydown = function( e )
 	}
 	else if ( e.keyCode == 87 && gCurrLevelID + 1 < gLevels.length )
 	{
-		// tempshit debug
-		LoadLevel( gCurrLevelID + 1 );
+		//LoadLevel( gCurrLevelID + 1 );
 	}
 	else if ( e.keyCode == 81 && gCurrLevelID > 0 )
 	{
-		// tempshit debug
-		LoadLevel( gCurrLevelID - 1 );
+		//LoadLevel( gCurrLevelID - 1 );
 	}	
 	
 	
@@ -864,14 +838,14 @@ document.onkeydown = function( e )
 var gCurrHintID = -1;
 var gHints =
 [
-	'PATH - use it to connect adjacent nodes (horizontally or vertically). Keyboard shortcut - "1".',
-	'NOT - use it to negate signal. Keyboard shortcut - "2".',
+	'PATH - use it to connect or disconnect adjacent nodes (horizontally or vertically). Keyboard shortcut - "1".',
+	'NOT - use it to negate signal. Can be placed only horizontally. Keyboard shortcut - "2".',
 	'OR - produces HI signal if any of it\'s inputs are HI. Keyboard shortcut - "3".',
 	'AND - It produces HI signal only if both inputs are HI. Keyboard shortcut - "4".',
 	'CROSS - allows to intesect signal paths. Keyboard shortcut - "5".',
 	'VERIFY - use to test the design and finish level if it\s 100% correct.',
-	'STEP - use to debug the design by stepping cycle and analyzing signal flow.',
-	'STOP - use to stop debugging or validation.',
+	'STEP - use to debug the design by stepping one cycle and analyzing signal flow.',
+	'STOP - use to stop debugging or verification.',
 ]
 
 c.onmousemove = function( e )
@@ -1063,13 +1037,13 @@ c.onmousedown = function( e )
 
 var InitGame = function()
 {
-	var value = localStorage.getItem( 'UnlockedLevelID' );
+	var value = localStorage.getItem( 'ULID' );
 	if ( value )
 	{
 		gUnlockedLevelID = parseInt( value );
 	}
 	LoadLevel( 0 );
-	gGameState = GameStateEnum.DESIGN;
+	gGameState = GameStateEnum.MAIN_MENU;
 }
 
 var DrawGame = function()
